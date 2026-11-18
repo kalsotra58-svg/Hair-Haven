@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import {
-  Phone, MapPin, Clock, ChevronDown, Menu, X, ArrowRight,
+  Phone, MapPin, Clock, ChevronDown, Menu, X, ArrowRight, ArrowLeft,
   MessageCircle, Sparkles, Shield, Heart, Stethoscope, Scissors, Leaf, Eye,
   CalendarCheck, Camera, AlertCircle, CheckCircle2, Navigation, AtSign, Droplets, Home,
-  Calculator as CalculatorIcon, TrendingUp, User,
+  Calculator as CalculatorIcon, TrendingUp, User, Bell, Search, SlidersHorizontal, Share2,
 } from 'lucide-react'
 
 /* ── Clinic data — extracted verbatim from the existing Hair Haven repository.
@@ -131,21 +131,23 @@ function Header() {
   )
 }
 
-/* ───────────────────────── Hero ───────────────────────── */
+/* ───────────────────────── Hero (v3 onboarding style) ───────────────────────── */
 function Hero() {
   return (
     <div className="hero" id="top">
       <div className="container hero-grid">
         <div>
-          <span className="overline">Channi Himmat, Jammu</span>
-          <h1>Hair restoration, planned with care.</h1>
+          <span className="overline">Hair Haven Transplant Clinic · Jammu</span>
+          <h1>Your Hair, <span className="grn">Your Confidence</span></h1>
           <p className="lead" style={{ marginTop: 18 }}>
-            FUE, BioSapphire FUE, PRP and GFC treatments — every plan begins with an honest assessment of your hair loss.
+            FUE, BioSapphire FUE, PRP and GFC treatments in Channi Himmat, Jammu — every plan begins with an honest assessment of your hair loss.
           </p>
           <div className="hero-ctas">
-            <button className="btn btn-primary" onClick={() => scrollToId('book')}>Book a Consultation <ArrowRight size={17} /></button>
-            <button className="link-arrow" onClick={() => scrollToId('calculator')}>Start hair analysis <ArrowRight size={16} /></button>
+            <button className="btn btn-primary btn-chip" onClick={() => scrollToId('home')}>
+              <span className="chip"><Sparkles size={16} /></span> Get Started <span className="chip"><ArrowRight size={16} /></span>
+            </button>
           </div>
+          <div className="dots" style={{ marginTop: 26 }} aria-hidden="true"><span className="on" /><span /><span /></div>
           <div className="hero-meta">
             <span><MapPin size={16} /> Sector 3, Channi Himmat</span>
             <span><Clock size={16} /> {CLINIC.hours}</span>
@@ -161,13 +163,163 @@ function Hero() {
   )
 }
 
+/* ───────────────────────── Home composition (v3) ───────────────────────── */
+function HomeComp({ query, setQuery, onCategory }: { query: string; setQuery: (q: string) => void; onCategory: (service: string) => void }) {
+  const hour = new Date().getHours()
+  const greet = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening'
+  const cats = [
+    { label: 'FUE', icon: 'scissors' as const, lime: true, service: 'FUE Hair Transplant' },
+    { label: 'PRP', icon: 'droplets' as const, lime: false, service: 'PRP Therapy' },
+    { label: 'GFC', icon: 'leaf' as const, lime: false, service: 'GFC Therapy' },
+    { label: 'More', icon: 'sparkles' as const, lime: false, service: '' },
+  ]
+  return (
+    <section id="home" style={{ paddingTop: 40 }}>
+      <div className="container">
+        <div className="greet-row">
+          <img className="g-av" src={asset('logo.png')} alt="Hair Haven logo" />
+          <div><small>{greet}</small><b>Aman!</b></div>
+          <button className="bell-btn" aria-label="Book a consultation" onClick={() => scrollToId('book')}><Bell size={20} /></button>
+        </div>
+        <div className="search-row">
+          <label className="search-pill">
+            <Search size={19} />
+            <input type="search" placeholder="Search treatments…" value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Search treatments" />
+          </label>
+          <button className="filter-btn" aria-label="See all services" onClick={() => scrollToId('services')}><SlidersHorizontal size={20} /></button>
+        </div>
+        <div className="cat-row">
+          {cats.map((c) => (
+            <button key={c.label} className={`cat-tile${c.lime ? ' lime' : ''}`} onClick={() => (c.service ? onCategory(c.service) : scrollToId('services'))}>
+              <span className="ic"><ServiceIcon k={c.icon} /></span>{c.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="feat-doc">
+          <div>
+            <span className="role">Featured Doctor</span>
+            <h3>Dr. Suby Kakkar</h3>
+            <p>Clinical Director at Hair Haven — leading assessments, transplant planning and growth-factor therapies.</p>
+            <button className="btn btn-primary btn-chip" onClick={() => scrollToId('doctor')}>Book Appointment <span className="chip"><ArrowRight size={16} /></span></button>
+          </div>
+          <div className="portrait-ph" role="img" aria-label="Portrait of Dr. Suby Kakkar — real photo coming soon">
+            <span className="ini">SK</span>
+            <span className="tag">Real photo coming soon</span>
+          </div>
+        </div>
+
+        <div style={{ marginTop: 34 }}>
+          <div className="sec-row">
+            <h2>Our Specialists</h2>
+            <button onClick={() => scrollToId('team')}>See All</button>
+          </div>
+          <div className="spec-grid">
+            {TEAM.filter((t) => ['Maxon Epston', 'Kashish Gupta'].includes(t.name)).map((t) => (
+              <button key={t.name} className="spec-card" onClick={() => scrollToId('team')}>
+                <span className="avatar-fallback">{t.initials}</span>
+                <span><h4>{t.name}</h4><p>{t.role}</p></span>
+                <span className="go"><ArrowRight size={17} /></span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ───────────────────────── Doctor profile (v3) ───────────────────────── */
+function DoctorProfile({ onBookVisit, toast }: { onBookVisit: (date: string, slot: string) => void; toast: (m: string) => void }) {
+  const days = useMemoDays()
+  const [selDate, setSelDate] = useState(days[0].iso)
+  const [selSlot, setSelSlot] = useState('10:00 AM')
+  const [liked, setLiked] = useState(false)
+  const share = async () => {
+    try { await navigator.clipboard.writeText(window.location.href); toast('Page link copied — share it with anyone considering treatment.') }
+    catch { toast('Copy the page address from your browser to share it.') }
+  }
+  return (
+    <section id="doctor">
+      <div className="container">
+        <div className="profile-top">
+          <button className="circle-btn" aria-label="Back to top" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}><ArrowLeft size={19} /></button>
+          <span style={{ fontWeight: 700 }}>Doctor Profile</span>
+          <span style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
+            <button className={`circle-btn${liked ? ' on' : ''}`} aria-label="Save doctor" aria-pressed={liked} onClick={() => setLiked(!liked)}><Heart size={18} fill={liked ? 'currentColor' : 'none'} /></button>
+            <button className="circle-btn" aria-label="Share this page" onClick={share}><Share2 size={18} /></button>
+          </span>
+        </div>
+        <div className="profile-grid">
+          <div className="profile-photo">
+            <div className="portrait-ph" role="img" aria-label="Portrait of Dr. Suby Kakkar — real photo coming soon">
+              <span className="ini">SK</span>
+              <span className="tag">Real photo coming soon</span>
+            </div>
+            <button className="book-pill-vert" onClick={() => scrollToId('book')}>BOOK</button>
+          </div>
+          <div>
+            <span className="overline" style={{ marginBottom: 8 }}>Clinical Director</span>
+            <h2 style={{ fontSize: '1.7rem' }}>Dr. Suby Kakkar</h2>
+            <div className="stat-row">
+              <div className="stat-cell"><span><MapPin size={13} /> Location</span><b>Sector 3, Jammu</b></div>
+              <div className="stat-cell"><span><Clock size={13} /> Hours</span><b>10–6 · 7 days</b></div>
+              <div className="stat-cell"><span><Sparkles size={13} /> Focus</span><b>FUE · BioSapphire</b></div>
+            </div>
+            <h3>About</h3>
+            <p style={{ color: 'var(--ink-2)', marginTop: 8 }}>
+              Dr. Suby Kakkar leads the clinical team at Hair Haven Transplant Clinic, Jammu — overseeing scalp
+              assessments, hair transplant procedures and growth-factor therapies. Every treatment plan at the
+              clinic is confirmed only after an in-person assessment; nothing is prescribed from photos alone.
+            </p>
+            <h3 style={{ marginTop: 24 }}>Available Time</h3>
+            <div className="date-chips" style={{ marginTop: 12 }} role="group" aria-label="Pick a preferred date">
+              {days.map((d) => (
+                <button key={d.iso} className="date-chip" aria-pressed={selDate === d.iso} onClick={() => setSelDate(d.iso)}>
+                  {d.label}<b>{d.day}</b>{d.mon}
+                </button>
+              ))}
+            </div>
+            <div className="slot-grid" style={{ marginTop: 14 }} role="group" aria-label="Pick a preferred time">
+              {SLOTS.map((s) => (
+                <button key={s} className="slot" aria-pressed={selSlot === s} onClick={() => setSelSlot(s)}>{s}</button>
+              ))}
+            </div>
+            <p className="small muted" style={{ marginTop: 12 }}>These are preferred times within clinic hours (10 AM – 6 PM) — the clinic confirms your exact slot personally.</p>
+            <button className="btn btn-primary btn-chip" style={{ marginTop: 18 }} onClick={() => onBookVisit(selDate, selSlot)}>
+              Book Appointment <span className="chip"><ArrowRight size={16} /></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+function useMemoDays() {
+  const out: { label: string; day: string; mon: string; iso: string }[] = []
+  const now = new Date()
+  for (let i = 0; i < 5; i++) {
+    const d = new Date(now); d.setDate(now.getDate() + i)
+    out.push({
+      label: d.toLocaleDateString('en-IN', { weekday: 'short' }),
+      day: String(d.getDate()),
+      mon: d.toLocaleDateString('en-IN', { month: 'short' }),
+      iso: d.toISOString().slice(0, 10),
+    })
+  }
+  return out
+}
+
 /* ───────────────────────── Services & Process ───────────────────────── */
 const SERVICE_GROUPS: { name: string; titles: string[] }[] = [
   { name: 'Hair Transplant', titles: ['FUE Hair Transplant', 'Advanced BioSapphire FUE', 'Hairline Design & Graft Estimation'] },
   { name: 'Beard & Eyebrow', titles: ['Beard Transplant', 'Eyebrow Transplant'] },
   { name: 'Treatments & Therapies', titles: ['PRP Therapy', 'GFC Therapy', 'Hair Regrowth Treatments', 'Scalp Assessment & Hair Analysis'] },
 ]
-function Services() {
+function Services({ query }: { query: string }) {
+  const q = query.trim().toLowerCase()
+  const matches = (s: Service) => !q || (s.title + ' ' + s.desc).toLowerCase().includes(q)
+  const anyMatch = SERVICES.some(matches)
   return (
     <section id="services">
       <div className="container">
@@ -176,10 +328,18 @@ function Services() {
           <h2>Complete hair restoration, under one roof</h2>
           <p>Surgical and non-surgical treatments, planned around your actual hair-loss stage. Your treatment plan — and its cost — is confirmed only after an in-clinic assessment.</p>
         </div>
-        {SERVICE_GROUPS.map((g) => (
+        {q && (
+          <p className="small" style={{ marginBottom: 18, color: 'var(--ink-2)' }}>
+            {anyMatch ? <>Showing treatments matching <strong>“{query.trim()}”</strong>.</> : <>No treatment matches <strong>“{query.trim()}”</strong> — try “FUE”, “PRP” or “beard”.</>}
+          </p>
+        )}
+        {SERVICE_GROUPS.map((g) => {
+          const rows = SERVICES.filter((s) => g.titles.includes(s.title) && matches(s))
+          if (rows.length === 0) return null
+          return (
           <div className="svc-group" key={g.name}>
             <h3>{g.name}</h3>
-            {SERVICES.filter((s) => g.titles.includes(s.title)).map((s) => (
+            {rows.map((s) => (
               <div className="svc-row" key={s.title}>
                 <span className="ic"><ServiceIcon k={s.icon} /></span>
                 <div>
@@ -189,10 +349,11 @@ function Services() {
               </div>
             ))}
           </div>
-        ))}
+          )
+        })}
         <div className="services-cta">
           <p>Not sure which treatment fits your stage?</p>
-          <button className="btn btn-primary" onClick={() => scrollToId('book')}>Book a Consultation <ArrowRight size={16} /></button>
+          <button className="btn btn-primary btn-chip" onClick={() => scrollToId('book')}>Book a Consultation <span className="chip"><ArrowRight size={16} /></span></button>
         </div>
       </div>
     </section>
@@ -319,7 +480,7 @@ const loadBookings = (): Booking[] => {
   try { return JSON.parse(localStorage.getItem('hh_bookings') || '[]') } catch { return [] }
 }
 
-function BookingSection({ prefill, toast }: { prefill: { service?: string; date?: string; notes?: string; nonce: number }; toast: (m: string) => void }) {
+function BookingSection({ prefill, toast }: { prefill: { service?: string; date?: string; slot?: string; notes?: string; nonce: number }; toast: (m: string) => void }) {
   const [step, setStep] = useState(1)
   const [service, setService] = useState('FUE Hair Transplant')
   const [mode, setMode] = useState('In-clinic')
@@ -337,6 +498,7 @@ function BookingSection({ prefill, toast }: { prefill: { service?: string; date?
     if (prefill.nonce === 0) return
     if (prefill.service) setService(prefill.service)
     if (prefill.date) setDate(prefill.date)
+    if (prefill.slot) setSlot(prefill.slot)
     if (prefill.notes) setNotes(prefill.notes)
     setDone(null); setStep(1)
   }, [prefill])
@@ -723,9 +885,16 @@ function BottomNav() {
 
 /* ───────────────────────── App ───────────────────────── */
 export default function App() {
-  const [prefill, setPrefill] = useState<{ service?: string; date?: string; notes?: string; nonce: number }>({ nonce: 0 })
+  const [prefill, setPrefill] = useState<{ service?: string; date?: string; slot?: string; notes?: string; nonce: number }>({ nonce: 0 })
   const [toastMsg, setToastMsg] = useState('')
+  const [query, setQuery] = useState('')
   const toast = (m: string) => { setToastMsg(m); window.setTimeout(() => setToastMsg(''), 4200) }
+  const bookCategory = (service: string) => { setPrefill({ service, nonce: Date.now() }); scrollToId('book') }
+  const bookVisit = (date: string, slot: string) => {
+    setPrefill({ service: 'FUE Hair Transplant', date, slot, nonce: Date.now() })
+    scrollToId('book')
+    toast('Date and time carried into your booking — add your details to finish the request.')
+  }
 
   const bookEstimate = (n: Norwood) => {
     setPrefill({
@@ -744,7 +913,9 @@ export default function App() {
       <Header />
       <main>
         <Hero />
-        <Services />
+        <HomeComp query={query} setQuery={setQuery} onCategory={bookCategory} />
+        <DoctorProfile onBookVisit={bookVisit} toast={toast} />
+        <Services query={query} />
         <Process />
         <Team />
         <Calculator onBookEstimate={bookEstimate} />
