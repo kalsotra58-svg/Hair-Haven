@@ -113,7 +113,7 @@ function scrollToId(id: string) {
 /* ───────────────────────── Header ───────────────────────── */
 function Header() {
   const [open, setOpen] = useState(false)
-  const links: [string, string][] = [['Services', 'services'], ['Process', 'process'], ['Team', 'team'], ['Calculator', 'calculator'], ['Results', 'results'], ['Journey', 'journey'], ['FAQ', 'faq'], ['Contact', 'contact']]
+  const links: [string, string][] = [['Services', 'services'], ['Process', 'process'], ['Team', 'team'], ['Results', 'results'], ['Contact', 'contact']]
   return (
     <header className="header">
       <div className="container header-in">
@@ -127,9 +127,8 @@ function Header() {
           ))}
         </nav>
         <div className="header-cta">
-          <a className="icon-btn" href={waLink('Hello Hair Haven, I would like to book a consultation.')} target="_blank" rel="noreferrer" aria-label="Chat on WhatsApp"><MessageCircle size={19} /></a>
-          <a className="icon-btn" href={CLINIC.phoneLink} aria-label="Call Hair Haven"><Phone size={19} /></a>
-          <button className="btn btn-primary" style={{ minHeight: 44, padding: '10px 20px' }} onClick={() => scrollToId('book')}>Book Consultation</button>
+          <a className="header-phone" href={CLINIC.phoneLink}><Phone size={16} /> {CLINIC.phoneDisplay}</a>
+          <button className="btn btn-primary" onClick={() => scrollToId('book')}>Book Consultation</button>
           <button className="icon-btn menu-btn" onClick={() => setOpen(!open)} aria-label="Toggle menu" aria-expanded={open}>{open ? <X size={20} /> : <Menu size={20} />}</button>
         </div>
       </div>
@@ -156,32 +155,32 @@ function Hero({ onPickDate }: { onPickDate: (iso: string) => void }) {
   return (
     <div className="hero" id="top">
       <div className="container hero-grid">
-        <div className="fade-up">
-          <span className="eyebrow"><Sparkles size={13} /> Hair Restoration · Channi Himmat, Jammu</span>
+        <div>
+          <span className="overline">Hair Restoration · Channi Himmat, Jammu</span>
           <h1>The Art &amp; Science of <em>Hair Restoration</em></h1>
-          <p className="lead" style={{ marginTop: 16 }}>
+          <p className="lead" style={{ marginTop: 20 }}>
             Welcome to Hair Haven, Jammu&apos;s premium hair restoration clinic. We combine advanced FUE graft
             techniques and growth-factor therapies to craft customised, natural-looking hairlines that restore
             both density and confidence.
           </p>
           <div className="hero-ctas">
             <button className="btn btn-primary" onClick={() => scrollToId('book')}>Book a Consultation <ArrowRight size={17} /></button>
-            <button className="btn btn-soft" onClick={() => scrollToId('calculator')}>Estimate My Grafts</button>
+            <button className="link-arrow" onClick={() => scrollToId('calculator')}>Estimate my grafts <ArrowRight size={16} /></button>
           </div>
-          <div className="trust-row">
-            <span className="chip"><MapPin size={13} /> Sector 3, Channi Himmat</span>
-            <span className="chip"><Clock size={13} /> {CLINIC.hours}</span>
-            <span className="chip"><Shield size={13} /> Sterile OT standards</span>
+          <div className="hero-meta">
+            <span><MapPin size={16} /> Sector 3, Channi Himmat</span>
+            <span><Clock size={16} /> {CLINIC.hours}</span>
+            <span><Shield size={16} /> Sterile OT standards</span>
           </div>
         </div>
-        <div className="card hero-card fade-up" aria-label="Featured specialist">
-          <div className="feat">
-            <div className="feat-top">
-              <img src={asset('doctor-avatar.png')} alt="Dr. Suby Kakkar, Clinical Director" loading="lazy" />
+        <div className="hero-photo">
+          <img src={asset('doctor-avatar.png')} alt="Dr. Suby Kakkar, Clinical Director of Hair Haven" />
+          <div className="hero-book">
+            <div className="who">
+              <img src={asset('doctor-avatar.png')} alt="" aria-hidden="true" />
               <div>
-                <span className="chip" style={{ background: 'rgba(255,255,255,.18)', color: '#fff' }}>Clinical Director</span>
-                <h3 style={{ marginTop: 8 }}>Dr. Suby Kakkar</h3>
-                <p>MBBS, E. Dermatology, Germany · Ex-Consultant, Max Hospital Delhi</p>
+                <h3>Dr. Suby Kakkar</h3>
+                <p>Clinical Director · MBBS, E. Dermatology, Germany · Ex-Consultant, Max Hospital Delhi</p>
               </div>
             </div>
             <div className="date-strip" role="group" aria-label="Pick a consultation date">
@@ -191,11 +190,7 @@ function Hero({ onPickDate }: { onPickDate: (iso: string) => void }) {
                 </span>
               ))}
             </div>
-            <p style={{ marginTop: 12, fontSize: '.78rem', color: 'rgba(255,255,255,.75)' }}>Tap a date to start booking — the clinic confirms your exact slot personally.</p>
-          </div>
-          <div className="hero-mini">
-            <div><b>FUE &amp; BioSapphire FUE</b><span>Advanced surgical restoration</span></div>
-            <div><b>PRP · GFC</b><span>Growth-factor therapies</span></div>
+            <p className="hero-note">Tap a date to start booking — the clinic confirms your exact slot personally.</p>
           </div>
         </div>
       </div>
@@ -209,20 +204,20 @@ function Services({ onBook }: { onBook: (service: string) => void }) {
     <section id="services">
       <div className="container">
         <div className="section-head">
-          <span className="eyebrow">Our Services</span>
+          <span className="overline">Our Services</span>
           <h2>Complete hair restoration, under one roof</h2>
           <p>Surgical and non-surgical treatments, planned around your actual hair-loss stage. Prices below are the clinic&apos;s published starting prices — your final plan is confirmed at consultation.</p>
         </div>
         <div className="grid grid-3">
           {SERVICES.map((s) => (
-            <article className="card" key={s.title}>
-              <span className="avatar-fallback" style={{ borderRadius: 16, marginBottom: 14 }}><ServiceIcon k={s.icon} /></span>
+            <article className="svc" key={s.title}>
+              <span className="ic"><ServiceIcon k={s.icon} /></span>
               <h3>{s.title}</h3>
-              <p className="small" style={{ color: 'var(--ink-2)', marginTop: 7 }}>{s.desc}</p>
-              <ul className="ticks">{s.features.map((f) => <li key={f}><Check size={15} />{f}</li>)}</ul>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 18 }}>
+              <p>{s.desc}</p>
+              <ul>{s.features.map((f) => <li key={f}><Check size={14} />{f}</li>)}</ul>
+              <div className="foot">
                 <span className="price">{s.price}</span>
-                <button className="btn btn-soft" style={{ minHeight: 40, padding: '8px 16px', fontSize: '.85rem' }} onClick={() => onBook(s.title)}>Book</button>
+                <button className="book-link" onClick={() => onBook(s.title)}>Book <ArrowRight size={15} /></button>
               </div>
             </article>
           ))}
@@ -236,20 +231,22 @@ function Process() {
   return (
     <section id="process">
       <div className="container">
-        <div className="section-head center">
-          <span className="eyebrow">The Procedure</span>
-          <h2>Our treatment process</h2>
-          <p>A rigorous, step-by-step scientific approach for maximum graft survival, natural aesthetics and a smooth recovery.</p>
-        </div>
-        <div className="grid grid-4">
-          {PROCESS.map((p) => (
-            <article className="card" key={p.step} style={{ textAlign: 'center' }}>
-              <img className="process-img" src={asset(p.img)} alt={p.title} loading="lazy" />
-              <span className="chip">{p.step}</span>
-              <h3 style={{ marginTop: 10 }}>{p.title}</h3>
-              <p className="small muted" style={{ marginTop: 6 }}>{p.desc}</p>
-            </article>
-          ))}
+        <div className="process-panel">
+          <div className="section-head" style={{ marginBottom: 40 }}>
+            <span className="overline">The Procedure</span>
+            <h2>Our treatment process</h2>
+            <p>A rigorous, step-by-step scientific approach for maximum graft survival, natural aesthetics and a smooth recovery.</p>
+          </div>
+          <div className="process-grid">
+            {PROCESS.map((p) => (
+              <article className="proc-step" key={p.step}>
+                <div className="step-art"><img src={asset(p.img)} alt={p.title} loading="lazy" /></div>
+                <span className="num">STEP {p.step}</span>
+                <h3>{p.title}</h3>
+                <p>{p.desc}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </div>
     </section>
@@ -262,27 +259,27 @@ function Team() {
     <section id="team">
       <div className="container">
         <div className="section-head">
-          <span className="eyebrow">Meet the Team</span>
+          <span className="overline">Meet the Team</span>
           <h2>The people behind your restoration</h2>
           <p>Led by Dr. Suby Kakkar, our clinical team handles everything from assessment and surgery to long-term follow-up care.</p>
         </div>
-        <div className="card" style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 26, alignItems: 'center', marginBottom: 18 }} id="founder-card">
-          <img className="team-photo" style={{ marginBottom: 0 }} src={asset('founder.png')} alt="Mr. Harish Kalsotra, Founder of Hair Haven" loading="lazy" />
+        <div className="founder">
+          <img src={asset('founder.png')} alt="Mr. Harish Kalsotra, Founder of Hair Haven" loading="lazy" />
           <div>
-            <span className="chip">Founder</span>
-            <h3 style={{ fontSize: '1.4rem', marginTop: 9 }}>Mr. Harish Kalsotra</h3>
-            <p style={{ color: 'var(--forest-700)', fontWeight: 700, fontSize: '.9rem' }}>Founder &amp; Client Relations Executive</p>
-            <p style={{ color: 'var(--ink-2)', marginTop: 10, maxWidth: 560 }}>“Dedicated to helping clients regain confidence through advanced hair restoration solutions and personalized care.”</p>
+            <span className="overline" style={{ marginBottom: 8 }}>Founder</span>
+            <h3 style={{ fontSize: '1.5rem' }}>Mr. Harish Kalsotra</h3>
+            <p style={{ color: 'var(--forest)', fontWeight: 700, fontSize: '.92rem', marginTop: 4 }}>Founder &amp; Client Relations Executive</p>
+            <blockquote>“Dedicated to helping clients regain confidence through advanced hair restoration solutions and personalized care.”</blockquote>
           </div>
         </div>
-        <div className="grid grid-4">
+        <div className="team-grid">
           {TEAM.map((t) => (
-            <article className="card" key={t.name}>
-              <span className="avatar-fallback" style={{ width: 58, height: 58, fontSize: '1.05rem', marginBottom: 13 }}>{t.initials}</span>
-              <span className="chip">{t.role}</span>
-              <h3 style={{ marginTop: 9 }}>{t.name}</h3>
-              <p style={{ fontSize: '.83rem', color: 'var(--forest-700)', fontWeight: 700 }}>{t.qual}</p>
-              <p className="small muted" style={{ marginTop: 7 }}>{t.bio}</p>
+            <article className="member" key={t.name}>
+              <span className="avatar-fallback">{t.initials}</span>
+              <p className="role">{t.role}</p>
+              <h3>{t.name}</h3>
+              <p className="qual">{t.qual}</p>
+              <p>{t.bio}</p>
             </article>
           ))}
         </div>
@@ -299,11 +296,11 @@ function Calculator({ onBookEstimate }: { onBookEstimate: (stage: Norwood) => vo
     <section id="calculator">
       <div className="container">
         <div className="section-head">
-          <span className="eyebrow">Hair Analysis</span>
+          <span className="overline">Hair Analysis</span>
           <h2>Norwood stage &amp; graft estimator</h2>
           <p>Select the stage that most closely matches your hair loss to see an estimated graft range, procedure time and recovery — the same estimator used on our existing website.</p>
         </div>
-        <div className="card">
+        <div className="panel">
           <div className="stage-picker" role="group" aria-label="Select your Norwood stage">
             {NORWOOD.map((n) => (
               <button key={n.stage} className="stage-btn" aria-pressed={stage === n.stage} onClick={() => setStage(n.stage)}>
@@ -419,12 +416,12 @@ function BookingSection({ prefill, toast }: { prefill: { service?: string; date?
     <section id="book">
       <div className="container">
         <div className="section-head">
-          <span className="eyebrow">Appointments</span>
+          <span className="overline">Appointments</span>
           <h2>Book your consultation</h2>
           <p>Three quick steps. You choose a <strong>preferred</strong> date and time — the clinic confirms your exact appointment personally on call or WhatsApp. Nothing is auto-confirmed.</p>
         </div>
         <div className="book-grid">
-          <div className="card">
+          <div className="panel">
             <div className="info-banner"><Clock size={17} /><span><strong>Live schedule:</strong> the clinic is open 10:00 AM – 6:00 PM, 7 days. Times in step 2 are <strong>preferred slots</strong> — the clinic confirms live availability personally on call or WhatsApp.</span></div>
             {step < 4 && (
               <div className="steps" aria-label="Booking progress">
@@ -527,18 +524,19 @@ function BookingSection({ prefill, toast }: { prefill: { service?: string; date?
           </div>
 
           <aside>
-            <div className="card" style={{ marginBottom: 18 }}>
+            <div className="side-note">
               <h3 style={{ display: 'flex', gap: 8, alignItems: 'center' }}><Phone size={18} /> Prefer to talk?</h3>
-              <p className="small" style={{ color: 'var(--ink-2)', margin: '8px 0 14px' }}>Call or WhatsApp the clinic directly — a real person from our team will help you.</p>
+              <p className="small" style={{ color: 'var(--ink-2)', margin: '8px 0 16px' }}>Call or WhatsApp the clinic directly — a real person from our team will help you.</p>
               <a className="btn btn-primary btn-block" href={CLINIC.phoneLink} style={{ marginBottom: 9 }}>Call {CLINIC.phoneDisplay}</a>
               <a className="btn btn-soft btn-block" href={waLink('Hello Hair Haven, I have a question.')} target="_blank" rel="noreferrer">WhatsApp Us</a>
-              <div style={{ marginTop: 16 }}>
+              <div style={{ marginTop: 10 }}>
                 <div className="kv"><span><Clock size={13} /> Hours</span><b>10 AM – 6 PM, daily</b></div>
                 <div className="kv"><span><MapPin size={13} /> Clinic</span><b>Channi Himmat, Jammu</b></div>
               </div>
             </div>
-            <div className="card">
-              <h3 style={{ marginBottom: 11 }}>My requests on this device</h3>
+            <hr className="divider" />
+            <div className="side-note">
+              <h3>My requests on this device</h3>
               {mine.length === 0 && <p className="small muted">No requests yet. When you book, your requests will appear here so you can re-check the details any time.</p>}
               {mine.slice(0, 4).map((b) => (
                 <div className="req-item" key={b.id}>
@@ -565,7 +563,7 @@ function Results() {
     <section id="results">
       <div className="container">
         <div className="section-head">
-          <span className="eyebrow">Patient Results</span>
+          <span className="overline">Patient Results</span>
           <h2>Real results, shared by our clinic</h2>
           <p>Before-and-after creatives published by Hair Haven on its official Instagram. Individual results vary — your expected outcome is discussed honestly at consultation, never promised in advance.</p>
         </div>
@@ -576,14 +574,14 @@ function Results() {
             </figure>
           ))}
         </div>
-        <div style={{ display: 'flex', gap: 11, flexWrap: 'wrap', marginTop: 20 }}>
-          <button className="btn btn-soft" onClick={() => setShowAll(!showAll)}>{showAll ? 'Show fewer results' : 'Show all results'}</button>
-          <a className="btn btn-soft" href={CLINIC.instagram} target="_blank" rel="noreferrer"><AtSign size={17} /> @hairhaventransplantclinic</a>
+        <div style={{ display: 'flex', gap: 26, flexWrap: 'wrap', alignItems: 'center', marginTop: 22 }}>
+          <button className="link-arrow" onClick={() => setShowAll(!showAll)}>{showAll ? 'Show fewer results' : 'Show all results'}</button>
+          <a className="link-arrow" href={CLINIC.instagram} target="_blank" rel="noreferrer"><AtSign size={16} /> @hairhaventransplantclinic</a>
         </div>
 
-        <div className="grid grid-4" style={{ marginTop: 34 }}>
+        <div className="grid grid-4" style={{ marginTop: 40 }}>
           {REVIEWS.map((r) => (
-            <article className="card" key={r.name}>
+            <article className="review" key={r.name}>
               <span className="stars" aria-label="5 star review">{[0, 1, 2, 3, 4].map((i) => <Star key={i} size={15} fill="currentColor" />)}</span>
               <p style={{ fontSize: '.93rem', color: 'var(--ink-2)', margin: '11px 0 14px' }}>“{r.quote}”</p>
               <div style={{ display: 'flex', gap: 11, alignItems: 'center' }}>
@@ -605,29 +603,27 @@ function Journey() {
     <section id="journey">
       <div className="container">
         <div className="section-head">
-          <span className="eyebrow">My Hair Journey</span>
+          <span className="overline">My Hair Journey</span>
           <h2>Your 12-month recovery journey</h2>
           <p>A transplant is a journey, not a day. Here is the clinic&apos;s standard recovery arc — in the upcoming Hair Haven app, this becomes your personal timeline with photo check-ins and team feedback.</p>
         </div>
-        <div className="card">
-          <div className="timeline">
-            {JOURNEY.map((j) => (
-              <div className="tl-item" key={j.when}>
-                <span className="tl-when">{j.when}</span>
-                <div><h3>{j.title}</h3><p className="small" style={{ color: 'var(--ink-2)', marginTop: 4 }}>{j.desc}</p></div>
-              </div>
-            ))}
-          </div>
+        <div className="timeline" style={{ maxWidth: 860 }}>
+          {JOURNEY.map((j) => (
+            <div className="tl-item" key={j.when}>
+              <span className="tl-when">{j.when}</span>
+              <div><h3>{j.title}</h3><p className="small" style={{ color: 'var(--ink-2)', marginTop: 4 }}>{j.desc}</p></div>
+            </div>
+          ))}
         </div>
-        <div className="grid grid-4" style={{ marginTop: 18 }}>
+        <div className="after-grid" style={{ marginTop: 40 }}>
           {[
             { t: 'Hair washing', d: 'Begin gentle washing only when the clinic advises, using the technique demonstrated at discharge. Never scrub the graft area in the first days.' },
             { t: 'Sleeping position', d: 'Sleep with your head elevated for the first few nights to reduce swelling, and avoid friction against the graft area.' },
             { t: 'Sun & activity', d: 'Protect the scalp from direct sun and avoid heavy exercise, swimming and helmets until the clinic clears you at review.' },
             { t: 'Follow-ups & therapy', d: 'Keep every follow-up. PRP/GFC sessions, when prescribed, support growth through the shedding and early-growth phases.' },
           ].map((c) => (
-            <article className="card" key={c.t}>
-              <h3 style={{ display: 'flex', gap: 8, alignItems: 'center' }}><Heart size={17} color="var(--emerald)" /> {c.t}</h3>
+            <article className="tint-card" key={c.t}>
+              <h3 style={{ display: 'flex', gap: 8, alignItems: 'center' }}><Heart size={17} color="var(--forest)" /> {c.t}</h3>
               <p className="small" style={{ color: 'var(--ink-2)', marginTop: 7 }}>{c.d}</p>
             </article>
           ))}
@@ -648,7 +644,7 @@ function Faq() {
     <section id="faq">
       <div className="container" style={{ maxWidth: 820 }}>
         <div className="section-head center">
-          <span className="eyebrow">Questions</span>
+          <span className="overline">Questions</span>
           <h2>Frequently asked questions</h2>
         </div>
         {FAQS.map((f, i) => (
@@ -671,24 +667,24 @@ function Contact() {
     <section id="contact">
       <div className="container">
         <div className="section-head">
-          <span className="eyebrow">Visit Us</span>
+          <span className="overline">Visit Us</span>
           <h2>Find the clinic</h2>
           <p>Located in the heart of Jammu at Channi Himmat. Tap the map or the directions button to start GPS navigation.</p>
         </div>
-        <div className="grid grid-2" style={{ alignItems: 'stretch' }}>
+        <div className="grid grid-2" style={{ alignItems: 'stretch', gap: 40 }}>
           <div className="map-wrap">
             <iframe title="Hair Haven location map" src={CLINIC.mapEmbed} loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
           </div>
-          <div className="card">
+          <div>
             <div className="kv"><span><MapPin size={14} /> Address</span><b>{CLINIC.address}</b></div>
             <div className="kv"><span><Clock size={14} /> Hours</span><b>10:00 AM – 6:00 PM · Open 7 days</b></div>
             <div className="kv"><span><Phone size={14} /> Phone / WhatsApp</span><b>{CLINIC.phoneDisplay}</b></div>
             <div className="kv"><span><AtSign size={14} /> Instagram</span><b>@hairhaventransplantclinic</b></div>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 20 }}>
+            <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap', alignItems: 'center', marginTop: 24 }}>
               <a className="btn btn-primary" href={CLINIC.maps} target="_blank" rel="noreferrer"><Navigation size={16} /> Get Directions</a>
-              <a className="btn btn-soft" href={waLink('Hello Hair Haven, I would like to book a consultation.')} target="_blank" rel="noreferrer"><MessageCircle size={16} /> WhatsApp</a>
+              <a className="link-arrow" href={waLink('Hello Hair Haven, I would like to book a consultation.')} target="_blank" rel="noreferrer"><MessageCircle size={16} /> WhatsApp the clinic</a>
             </div>
-            <p className="small muted" style={{ marginTop: 16, display: 'flex', gap: 7 }}><Camera size={15} style={{ flex: 'none', marginTop: 2 }} /> Tip: bring photos of your hair loss (front, sides, crown) to your consultation — they help the team assess your stage faster.</p>
+            <p className="small muted" style={{ marginTop: 20, display: 'flex', gap: 7 }}><Camera size={15} style={{ flex: 'none', marginTop: 2 }} /> Tip: bring photos of your hair loss (front, sides, crown) to your consultation — they help the team assess your stage faster.</p>
           </div>
         </div>
       </div>
