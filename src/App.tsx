@@ -214,7 +214,7 @@ function AuthFlow({ onDone, onClose }: { onDone: (p: Profile) => void; onClose: 
               ))}
             </div>
             <p className="small" style={{ marginTop: 20, display: 'flex', gap: 7, alignItems: 'center', color: 'var(--ink-2)' }}>
-              <Clock size={14} style={{ color: '#8FC31F' }} />
+              <Clock size={14} style={{ color: '#B98F3E' }} />
               {secs > 0
                 ? <>Resend code in 00:{String(secs).padStart(2, '0')}</>
                 : <>Didn&apos;t get it? <button className="link-arrow" onClick={() => { setSecs(30); setOtp(['', '', '', '', '', '']) }}>Resend code</button></>}
@@ -318,7 +318,7 @@ function HomeComp({ query, setQuery, onCategory, profileName, onAvatar }: { quer
   const pops = [
     { label: 'FUE', icon: 'scissors' as const, service: 'FUE Hair Transplant', tint: '#E6FBF1' },
     { label: 'BioSapphire', icon: 'sparkles' as const, service: 'Advanced BioSapphire FUE', tint: '#EEF4EE' },
-    { label: 'PRP', icon: 'droplets' as const, service: 'PRP Therapy', tint: '#F2F9E0' },
+    { label: 'PRP', icon: 'droplets' as const, service: 'PRP Therapy', tint: '#FBF3D9' },
     { label: 'GFC', icon: 'leaf' as const, service: 'GFC Therapy', tint: '#F0FAF4' },
     { label: 'Beard', icon: 'user' as const, service: 'Beard Transplant', tint: '#EEF4EE' },
   ]
@@ -402,7 +402,7 @@ function HomeComp({ query, setQuery, onCategory, profileName, onAvatar }: { quer
           <div className="pop-row">
             {pops.map((p) => (
               <button key={p.label} className="pop-tile" onClick={() => onCategory(p.service)}>
-                <span className="ic" style={{ background: p.tint }}><ServiceIcon k={p.icon} /></span>{p.label}
+                <span className="ic" style={{ background: p.tint, ...(p.tint === '#FBF3D9' ? { color: '#B98F3E' } : {}) }}><ServiceIcon k={p.icon} /></span>{p.label}
               </button>
             ))}
           </div>
@@ -466,7 +466,7 @@ function DoctorProfile({ onBookVisit, toast }: { onBookVisit: (date: string, slo
         </div>
         <div className="stats-band">
           <div className="stat-col">
-            <span className="stat-ic" style={{ background: '#E6FBF1' }}><MapPin size={20} /></span>
+            <span className="stat-ic" style={{ background: '#EAF6EC' }}><MapPin size={20} /></span>
             <b>Sector 3 · Jammu</b><span>Clinic Location</span>
           </div>
           <div className="stat-col">
@@ -474,7 +474,7 @@ function DoctorProfile({ onBookVisit, toast }: { onBookVisit: (date: string, slo
             <b>10–6 · Open 7 days</b><span>Clinic Hours</span>
           </div>
           <div className="stat-col">
-            <span className="stat-ic" style={{ background: '#F4FCDD' }}><Sparkles size={20} /></span>
+            <span className="stat-ic" style={{ background: '#FBF3D9', color: '#B98F3E' }}><Sparkles size={20} /></span>
             <b>FUE · BioSapphire</b><span>Hair Transplant</span>
           </div>
         </div>
@@ -513,7 +513,7 @@ function DoctorProfile({ onBookVisit, toast }: { onBookVisit: (date: string, slo
           <p className="small" style={{ marginTop: 12, display: 'flex', gap: 7, alignItems: 'center', color: 'var(--ink-2)' }}>
             <Info size={14} style={{ color: '#5F7F66', flex: 'none' }} /> Preferred time — the clinic confirms your exact slot personally
           </p>
-          <button className="btn btn-primary btn-chip" style={{ marginTop: 18 }} onClick={() => onBookVisit(selDate, selSlot)}>
+          <button className="btn btn-primary btn-chip profile-cta" style={{ marginTop: 18 }} onClick={() => onBookVisit(selDate, selSlot)}>
             Book Appointment <span className="chip"><ArrowRight size={16} /></span>
           </button>
         </div>
