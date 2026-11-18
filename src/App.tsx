@@ -943,7 +943,7 @@ function Contact() {
             <div className="kv"><span><Phone size={14} /> Phone / WhatsApp</span><b>{CLINIC.phoneDisplay}</b></div>
             <div className="kv"><span><AtSign size={14} /> Instagram</span><b>@hairhaventransplantclinic</b></div>
             <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap', alignItems: 'center', marginTop: 24 }}>
-              <a className="btn btn-primary" href={CLINIC.maps} target="_blank" rel="noreferrer"><Navigation size={16} /> Get Directions</a>
+              <a className="btn btn-primary btn-chip" href={CLINIC.maps} target="_blank" rel="noreferrer"><Navigation size={16} /> Get Directions <span className="chip"><ArrowRight size={16} /></span></a>
               <a className="link-arrow" href={waLink('Hello Hair Haven, I would like to book a consultation.')} target="_blank" rel="noreferrer"><MessageCircle size={16} /> WhatsApp the clinic</a>
             </div>
             <p className="small muted" style={{ marginTop: 20, display: 'flex', gap: 7 }}><Camera size={15} style={{ flex: 'none', marginTop: 2 }} /> Tip: bring photos of your hair loss (front, sides, crown) to your consultation — they help the team assess your stage faster.</p>
