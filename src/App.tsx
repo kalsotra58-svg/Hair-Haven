@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import {
-  Phone, MapPin, Clock, ChevronDown, Menu, X, ArrowRight, ArrowLeft,
+  Phone, MapPin, Clock, ChevronDown, ChevronLeft, ChevronRight, Menu, X, ArrowRight, ArrowLeft, ArrowUpRight,
   MessageCircle, Sparkles, Shield, Heart, Stethoscope, Scissors, Leaf, Eye,
-  CalendarCheck, Camera, AlertCircle, CheckCircle2, Navigation, AtSign, Droplets, Home,
-  Calculator as CalculatorIcon, TrendingUp, User, Bell, Search, SlidersHorizontal, Share2, BadgeCheck,
+  CalendarCheck, Camera, AlertCircle, CheckCircle2, Check, Info, Navigation, AtSign, Droplets, Home,
+  Calculator as CalculatorIcon, TrendingUp, User, Bell, Search, SlidersHorizontal, Share2,
 } from 'lucide-react'
 
 /* ── Clinic data — extracted verbatim from the existing Hair Haven repository.
@@ -26,7 +26,7 @@ export const CLINIC = {
 
 const waLink = (text: string) => `${CLINIC.whatsapp}?text=${encodeURIComponent(text)}`
 
-interface Service { title: string; desc: string; price: string; features: string[]; icon: 'scissors' | 'sparkles' | 'droplets' | 'leaf' | 'eye' | 'stethoscope' }
+interface Service { title: string; desc: string; price: string; features: string[]; icon: 'scissors' | 'sparkles' | 'droplets' | 'leaf' | 'eye' | 'stethoscope' | 'user' }
 const SERVICES: Service[] = [
   { title: 'FUE Hair Transplant', desc: 'Healthy grafts are carefully taken from the donor area and implanted into bald areas. Minimally invasive, no major scars, natural-looking density and a faster recovery.', price: 'Starting from ₹21,000', features: ['Minimally invasive', 'No major scars', 'Natural density', 'Fast recovery'], icon: 'scissors' },
   { title: 'Advanced BioSapphire FUE', desc: 'An advanced FUE variant using precise sapphire blades instead of steel to create micro-channels — superior graft placement, higher density and accelerated healing.', price: 'Starting from ₹31,000', features: ['Sapphire micro-channels', 'Higher graft density', 'Rapid scalp healing', 'Extremely natural results'], icon: 'sparkles' },
@@ -46,6 +46,7 @@ const ServiceIcon = ({ k }: { k: Service['icon'] }) => {
     case 'leaf': return <Leaf {...s} />
     case 'eye': return <Eye {...s} />
     case 'stethoscope': return <Stethoscope {...s} />
+    case 'user': return <User {...s} />
     default: return <Sparkles {...s} />
   }
 }
@@ -136,97 +137,120 @@ function Header() {
 /* ───────────────────────── DUMMY sign-in (v4) ─────────────────────────
    Demo only: no real authentication, no real OTP is ever sent. Any 4 digits
    "verify". The profile is stored only in this browser (localStorage). */
-interface Profile { name: string; phone: string }
+interface Profile { name: string; phone: string; age?: number; gender?: string }
 function loadProfile(): Profile | null {
   try { const raw = localStorage.getItem('hh_profile'); return raw ? (JSON.parse(raw) as Profile) : null } catch { return null }
 }
 function AuthFlow({ onDone, onClose }: { onDone: (p: Profile) => void; onClose: () => void }) {
   const [step, setStep] = useState(1)
   const [phone, setPhone] = useState('')
-  const [otp, setOtp] = useState(['', '', '', ''])
+  const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [name, setName] = useState('')
+  const [age, setAge] = useState('')
+  const [gender, setGender] = useState('')
   const [err, setErr] = useState('')
-  const otpRef = (i: number) => (el: HTMLInputElement | null) => { if (el) el.dataset.idx = String(i) }
+  const [secs, setSecs] = useState(30)
+  useEffect(() => {
+    if (step !== 2 || secs <= 0) return
+    const t = window.setTimeout(() => setSecs(secs - 1), 1000)
+    return () => window.clearTimeout(t)
+  }, [step, secs])
   const setDigit = (i: number, v: string) => {
     const d = v.replace(/\D/g, '').slice(-1)
     const next = [...otp]; next[i] = d; setOtp(next)
-    if (d && i < 3) {
-      const el = document.querySelector<HTMLInputElement>(`.otp-row input[data-idx="${i + 1}"]`)
-      el?.focus()
-    }
+    if (d && i < 5) document.querySelector<HTMLInputElement>(`.otp-row input[data-idx="${i + 1}"]`)?.focus()
+  }
+  const pasteOtp = (v: string) => {
+    const digits = v.replace(/\D/g, '').slice(0, 6).split('')
+    if (digits.length > 1) setOtp([...digits, '', '', '', '', '', ''].slice(0, 6))
   }
   const submitPhone = () => {
-    const digits = phone.replace(/\D/g, '').replace(/^91/, '')
-    if (!/^[6-9]\d{9}$/.test(digits)) { setErr('Please enter a valid 10-digit Indian mobile number.'); return }
-    setErr(''); setPhone(digits); setStep(2)
+    const digits = phone.replace(/\D/g, '').replace(/^91(?=\d{10})/, '')
+    if (!/^[6-9]\d{9}$/.test(digits)) { setErr('Enter a 10-digit mobile number.'); return }
+    setErr(''); setPhone(digits); setSecs(30); setStep(2)
   }
-  const submitOtp = () => {
-    if (otp.some((d) => !d)) { setErr('Please enter all 4 digits — any digits work, this is a demo.'); return }
-    setErr(''); setStep(3)
-  }
+  const ageNum = Number(age)
+  const ageValid = age !== '' && Number.isFinite(ageNum) && ageNum >= 1 && ageNum <= 120
+  const profileValid = name.trim().length >= 2 && ageValid && gender !== ''
   const submitProfile = () => {
-    if (name.trim().length < 2) { setErr('Please enter your name.'); return }
-    const p = { name: name.trim(), phone }
+    if (!profileValid) { setErr(!ageValid && age !== '' ? 'Enter a valid age.' : 'Please complete all fields.'); return }
+    const p: Profile = { name: name.trim(), phone, age: ageNum, gender }
     try { localStorage.setItem('hh_profile', JSON.stringify(p)) } catch { /* storage unavailable */ }
     onDone(p)
   }
+  const back = () => { setErr(''); if (step === 1) onClose(); else setStep(step - 1) }
   return (
     <div className="auth-overlay" role="dialog" aria-modal="true" aria-label="Sign in (demo)">
       <div className="auth-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <img className="auth-logo" src={asset('logo.png')} alt="Hair Haven logo" />
-          <button className="circle-btn" onClick={onClose} aria-label="Close sign-in"><X size={19} /></button>
+          <button className="circle-btn" onClick={back} aria-label="Back"><ChevronLeft size={20} /></button>
+          {step === 2 && <span className="demo-tag"><i />Demo flow</span>}
         </div>
-        <span className="demo-tag" style={{ marginTop: 22 }}><AlertCircle size={13} /> Demo sign-in — no real OTP is sent</span>
         {step === 1 && (
           <>
-            <h2 style={{ fontSize: '1.6rem', marginTop: 16 }}>Welcome to Hair Haven</h2>
-            <p style={{ color: 'var(--ink-2)', marginTop: 8 }}>Sign in with your mobile number to manage consultations and your hair journey.</p>
-            <div className="field" style={{ marginTop: 24 }}>
-              <label htmlFor="auth-phone">Mobile number</label>
-              <input id="auth-phone" type="tel" inputMode="numeric" placeholder="e.g. 98765 43210" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <h2 style={{ fontSize: '1.75rem', marginTop: 28 }}>Welcome to Hair Haven</h2>
+            <p style={{ color: 'var(--ink-2)', marginTop: 8 }}>Enter your mobile number to continue. We&apos;ll keep your appointments and hair journey in one place.</p>
+            <div className="field" style={{ marginTop: 32 }}>
+              <label htmlFor="auth-phone">Mobile Number</label>
+              <div className="phone-shell">
+                <span className="pfx">+91</span><span className="div" />
+                <input id="auth-phone" type="tel" inputMode="numeric" placeholder="98765 43210" value={phone} onChange={(e) => setPhone(e.target.value)} />
+              </div>
             </div>
             {err && <p className="err"><AlertCircle size={15} /> {err}</p>}
-            <button className="btn btn-primary btn-chip" style={{ width: '100%', marginTop: 20 }} onClick={submitPhone}>
-              <span className="chip"><ArrowRight size={16} /></span> Continue <span className="chip"><ArrowRight size={16} /></span>
-            </button>
-            <p className="small muted" style={{ marginTop: 14, textAlign: 'center' }}>Demo only — your number is not sent anywhere.</p>
+            <button className="btn btn-primary" style={{ width: '100%', marginTop: 24, minHeight: 56 }} onClick={submitPhone}>Send OTP</button>
+            <p className="small muted" style={{ marginTop: 16, textAlign: 'center' }}>Demo sign-in — no real OTP is sent and no account is created. Use any 10-digit number to continue.</p>
           </>
         )}
         {step === 2 && (
           <>
-            <h2 style={{ fontSize: '1.6rem', marginTop: 16 }}>Enter OTP</h2>
-            <p style={{ color: 'var(--ink-2)', marginTop: 8 }}>We would normally text a code to +91 {phone}. <strong>This demo sends nothing</strong> — type any 4 digits.</p>
-            <div className="otp-row" style={{ marginTop: 24 }}>
+            <h2 style={{ fontSize: '1.75rem', marginTop: 28 }}>Enter OTP</h2>
+            <p style={{ color: 'var(--ink-2)', marginTop: 8 }}>We&apos;ve sent a 6-digit demo code to +91 ••••• ••{phone.slice(-3)}</p>
+            <div className="otp-row" style={{ marginTop: 32 }}>
               {otp.map((d, i) => (
-                <input key={i} ref={otpRef(i)} type="tel" inputMode="numeric" maxLength={1} value={d} onChange={(e) => setDigit(i, e.target.value)} aria-label={`OTP digit ${i + 1}`} />
+                <input key={i} data-idx={i} className={d ? 'filled' : ''} type="tel" inputMode="numeric" maxLength={1} value={d}
+                  onChange={(e) => { if (e.target.value.length > 1) pasteOtp(e.target.value); else setDigit(i, e.target.value) }}
+                  aria-label={`OTP digit ${i + 1}`} />
               ))}
             </div>
-            {err && <p className="err"><AlertCircle size={15} /> {err}</p>}
-            <button className="btn btn-primary btn-chip" style={{ width: '100%', marginTop: 22 }} onClick={submitOtp}>
-              <span className="chip"><ArrowRight size={16} /></span> Verify <span className="chip"><ArrowRight size={16} /></span>
-            </button>
-            <button className="link-arrow" style={{ marginTop: 16 }} onClick={() => setStep(1)}>Use a different number</button>
+            <p className="small" style={{ marginTop: 20, display: 'flex', gap: 7, alignItems: 'center', color: 'var(--ink-2)' }}>
+              <Clock size={14} style={{ color: '#8FC31F' }} />
+              {secs > 0
+                ? <>Resend code in 00:{String(secs).padStart(2, '0')}</>
+                : <>Didn&apos;t get it? <button className="link-arrow" onClick={() => { setSecs(30); setOtp(['', '', '', '', '', '']) }}>Resend code</button></>}
+            </p>
+            <button className="btn btn-primary" style={{ width: '100%', marginTop: 32, minHeight: 56 }} disabled={otp.some((d) => !d)} onClick={() => setStep(3)}>Verify</button>
+            <p className="small muted" style={{ marginTop: 14, textAlign: 'center' }}>Demo — any 6 digits work; nothing is actually sent.</p>
           </>
         )}
         {step === 3 && (
           <>
-            <h2 style={{ fontSize: '1.6rem', marginTop: 16 }}>Create your profile</h2>
-            <p style={{ color: 'var(--ink-2)', marginTop: 8 }}>Just your name for now — the clinic collects treatment details in person, never through a demo form.</p>
-            <div className="field" style={{ marginTop: 24 }}>
-              <label htmlFor="auth-name">Your name</label>
-              <input id="auth-name" type="text" placeholder="e.g. Rohit Sharma" value={name} onChange={(e) => setName(e.target.value)} />
+            <h2 style={{ fontSize: '1.75rem', marginTop: 28 }}>Create your profile</h2>
+            <p style={{ color: 'var(--ink-2)', marginTop: 8 }}>A few details so the clinic can personalise your consultation and follow-ups.</p>
+            <div className="field" style={{ marginTop: 32 }}>
+              <label htmlFor="auth-name">Full Name</label>
+              <input id="auth-name" type="text" placeholder="e.g. Aman Kalsotra" value={name} onChange={(e) => setName(e.target.value)} autoCapitalize="words" />
+            </div>
+            <div className="field" style={{ marginTop: 20 }}>
+              <label htmlFor="auth-age">Age</label>
+              <div className="phone-shell">
+                <input id="auth-age" type="tel" inputMode="numeric" placeholder="e.g. 32" value={age} onChange={(e) => setAge(e.target.value.replace(/\D/g, '').slice(0, 3))} />
+                <span style={{ color: 'var(--ink-2)', fontSize: '.93rem' }}>Years</span>
+              </div>
+            </div>
+            <div className="field" style={{ marginTop: 20 }}>
+              <label>Gender</label>
+              <div className="gender-row">
+                {['Male', 'Female', 'Other'].map((g) => (
+                  <button key={g} className="gender-chip" aria-pressed={gender === g} onClick={() => setGender(g)}>{g}</button>
+                ))}
+              </div>
             </div>
             {err && <p className="err"><AlertCircle size={15} /> {err}</p>}
-            <button className="btn btn-primary btn-chip" style={{ width: '100%', marginTop: 20 }} onClick={submitProfile}>
-              <span className="chip"><Sparkles size={16} /></span> Create Profile <span className="chip"><ArrowRight size={16} /></span>
-            </button>
-            <p className="small muted" style={{ marginTop: 14, textAlign: 'center' }}>Saved only on this device (demo profile).</p>
+            <button className="btn btn-primary" style={{ width: '100%', marginTop: 32, minHeight: 56 }} disabled={!profileValid} onClick={submitProfile}>Continue</button>
+            <p className="small muted" style={{ marginTop: 12, textAlign: 'center' }}>Demo profile — these details are not saved anywhere.</p>
           </>
         )}
-        <div className="dots" style={{ marginTop: 28, justifyContent: 'center' }} aria-hidden="true">
-          <span className={step === 1 ? 'on' : ''} /><span className={step === 2 ? 'on' : ''} /><span className={step === 3 ? 'on' : ''} />
-        </div>
       </div>
     </div>
   )
@@ -234,21 +258,35 @@ function AuthFlow({ onDone, onClose }: { onDone: (p: Profile) => void; onClose: 
 
 /* ───────────────────────── Hero (v3 onboarding style) ───────────────────────── */
 function Hero({ onStart }: { onStart: () => void }) {
+  const slides = [
+    { src: asset('founder.png'), alt: 'Harish Kalsotra, Founder of Hair Haven Transplant Clinic', real: true },
+    { src: '/img/scene-clinic.jpg', alt: 'Hair Haven clinic interior (dummy photo)', real: false },
+    { src: '/img/doc-suby.jpg', alt: 'Doctor portrait (dummy photo)', real: false },
+    { src: '/img/spec-maxon.jpg', alt: 'Specialist portrait (dummy photo)', real: false },
+  ]
+  const [slide, setSlide] = useState(0)
+  const cur = slides[slide]
   return (
     <div className="hero" id="top">
       <div className="container hero-grid">
         <div>
-          <span className="overline">Hair Haven Transplant Clinic · Jammu</span>
           <h1>Your Hair, <span className="grn">Your Confidence</span></h1>
-          <p className="lead" style={{ marginTop: 18 }}>
-            FUE, BioSapphire FUE, PRP and GFC treatments in Channi Himmat, Jammu — every plan begins with an honest assessment of your hair loss.
+          <p className="lead" style={{ marginTop: 14, maxWidth: 430 }}>
+            Trusted hair transplant and restoration in Channi Himmat, Jammu — book a consultation in minutes.
           </p>
+          <div className="dots" style={{ marginTop: 20 }} role="group" aria-label="Welcome photos">
+            {slides.map((s, i) => (
+              <span key={i} className={i === slide ? 'on' : ''} onClick={() => setSlide(i)} style={{ cursor: 'pointer' }} role="button" aria-label={`Photo ${i + 1}`} />
+            ))}
+          </div>
           <div className="hero-ctas">
-            <button className="btn btn-primary btn-chip" onClick={onStart}>
-              <span className="chip"><Sparkles size={16} /></span> Get Started <span className="chip"><ArrowRight size={16} /></span>
+            <button className="btn btn-primary btn-welcome" onClick={onStart}>
+              <span className="chip-l"><ChevronRight size={20} /></span>
+              Get Started
+              <span className="chev-r"><ChevronRight size={18} /><ChevronRight size={18} /></span>
             </button>
           </div>
-          <div className="dots" style={{ marginTop: 26 }} aria-hidden="true"><span className="on" /><span /><span /></div>
+          <p className="small muted" style={{ textAlign: 'center', marginTop: 12 }}>Demo onboarding — explore freely, nothing is saved.</p>
           <div className="hero-meta">
             <span><MapPin size={16} /> Sector 3, Channi Himmat</span>
             <span><Clock size={16} /> {CLINIC.hours}</span>
@@ -256,8 +294,10 @@ function Hero({ onStart }: { onStart: () => void }) {
           </div>
         </div>
         <div className="hero-photo">
-          <img src={asset('founder.png')} alt="Harish Kalsotra, Founder of Hair Haven Transplant Clinic" />
-          <span className="hero-chip"><MapPin size={15} /> Hair Haven Transplant Clinic · Channi Himmat, Jammu</span>
+          <img src={cur.src} alt={cur.alt} />
+          {cur.real
+            ? <span className="hero-chip"><MapPin size={15} /> Hair Haven Transplant Clinic · Channi Himmat, Jammu</span>
+            : <span className="dummy-tag" style={{ left: 18, bottom: 18 }}>Dummy photo</span>}
         </div>
       </div>
     </div>
@@ -265,11 +305,6 @@ function Hero({ onStart }: { onStart: () => void }) {
 }
 
 /* ───────────────────────── Home composition (v3) ───────────────────────── */
-function nextAvailable(): string {
-  const now = new Date()
-  const label = now.getHours() < 18 ? 'Today' : 'Tomorrow'
-  return `${label}, from 10:00 AM`
-}
 function HomeComp({ query, setQuery, onCategory, profileName, onAvatar }: { query: string; setQuery: (q: string) => void; onCategory: (service: string) => void; profileName: string; onAvatar: () => void }) {
   const hour = new Date().getHours()
   const greet = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening'
@@ -281,15 +316,15 @@ function HomeComp({ query, setQuery, onCategory, profileName, onAvatar }: { quer
     { label: 'More', icon: 'sparkles' as const, lime: false, service: '' },
   ]
   const pops = [
-    { label: 'Transplant', icon: 'scissors' as const, service: 'FUE Hair Transplant' },
-    { label: 'PRP', icon: 'droplets' as const, service: 'PRP Therapy' },
-    { label: 'GFC', icon: 'leaf' as const, service: 'GFC Therapy' },
-    { label: 'Beard', icon: 'sparkles' as const, service: 'Beard Transplant' },
-    { label: 'Eyebrow', icon: 'eye' as const, service: 'Eyebrow Transplant' },
+    { label: 'FUE', icon: 'scissors' as const, service: 'FUE Hair Transplant', tint: '#E6FBF1' },
+    { label: 'BioSapphire', icon: 'sparkles' as const, service: 'Advanced BioSapphire FUE', tint: '#EEF4EE' },
+    { label: 'PRP', icon: 'droplets' as const, service: 'PRP Therapy', tint: '#F2F9E0' },
+    { label: 'GFC', icon: 'leaf' as const, service: 'GFC Therapy', tint: '#F0FAF4' },
+    { label: 'Beard', icon: 'user' as const, service: 'Beard Transplant', tint: '#EEF4EE' },
   ]
   const cards = [
-    { img: '/img/scene-procedure.jpg', title: 'FUE Hair Transplant', sub: 'Surgical restoration', service: 'FUE Hair Transplant' },
-    { img: '/img/scene-clinic.jpg', title: 'The Clinic & OT', sub: 'Channi Himmat, Jammu', service: '' },
+    { img: '/img/scene-procedure.jpg', title: 'FUE Hair Transplant', price: 'from ₹21,000', service: 'FUE Hair Transplant' },
+    { img: '/img/scene-clinic.jpg', title: 'PRP Therapy', price: 'from ₹2,000/session', service: 'PRP Therapy' },
   ]
   return (
     <section id="home" style={{ paddingTop: 40 }}>
@@ -304,35 +339,31 @@ function HomeComp({ query, setQuery, onCategory, profileName, onAvatar }: { quer
         <div className="search-row">
           <label className="search-pill">
             <Search size={19} />
-            <input type="search" placeholder="Search treatments…" value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Search treatments" />
+            <input type="search" placeholder="Search doctors, treatments..." value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Search treatments" />
           </label>
           <button className="filter-btn" aria-label="See all services" onClick={() => scrollToId('services')}><SlidersHorizontal size={20} /></button>
         </div>
-        <div className="sec-row" style={{ marginTop: 28 }}>
-          <h2>Categories</h2>
-          <button onClick={() => scrollToId('services')}>View all</button>
-        </div>
-        <div className="cat-row" style={{ marginTop: 10 }}>
+        <div className="cat-row">
           {cats.map((c) => (
             <button key={c.label} className={`cat-tile${c.lime ? ' lime' : ''}`} onClick={() => (c.service ? onCategory(c.service) : scrollToId('services'))}>
               <span className="ic"><ServiceIcon k={c.icon} /></span>{c.label}
             </button>
           ))}
         </div>
-
-        <div className="sec-row" style={{ marginTop: 30 }}>
-          <h2>Featured Doctor</h2>
+        <div className="view-all-row">
+          <button onClick={() => scrollToId('services')}>View all</button>
         </div>
-        <div className="feat-doc" style={{ marginTop: 10 }}>
+
+        <h2 style={{ fontSize: '1.25rem', marginTop: 24 }}>Featured Doctor</h2>
+        <div className="feat-doc">
           <div>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>Dr. Suby Kakkar <BadgeCheck size={21} className="verified" aria-label="Clinical Director" /></h3>
-            <p style={{ fontWeight: 700, color: '#3E6216' }}>Clinical Director</p>
-            <p>Leading assessments, transplant planning and growth-factor therapies at Hair Haven.</p>
-            <p style={{ fontWeight: 650 }}><Clock size={15} style={{ verticalAlign: -2, marginRight: 6 }} />Next Available — {nextAvailable()} <span style={{ fontWeight: 550 }}>(clinic confirms)</span></p>
-            <button className="btn btn-primary btn-chip" onClick={() => scrollToId('doctor')}>Book Appointment <span className="chip"><ArrowRight size={16} /></span></button>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: 7 }}>Dr. Suby Kakkar <span className="tick"><Check size={12} strokeWidth={3.5} /></span></h3>
+            <p style={{ fontWeight: 600, color: '#3E4A42' }}>Clinical Director</p>
+            <p style={{ fontWeight: 650, marginTop: 10 }}><Clock size={14} style={{ verticalAlign: -2, marginRight: 6 }} />Open today · 10 AM – 6 PM</p>
+            <button className="btn btn-primary btn-chip btn-44" style={{ marginTop: 14 }} onClick={() => scrollToId('doctor')}>Book Appointment <span className="chip"><ArrowRight size={15} /></span></button>
           </div>
           <div className="feat-photo">
-            <img src="/img/doc-suby.jpg" alt="Portrait placeholder for Dr. Suby Kakkar (dummy photo)" />
+            <img src="/img/doc-suby.jpg" alt="Portrait placeholder (dummy photo — not Dr. Suby Kakkar)" />
             <span className="dummy-tag">Dummy photo</span>
           </div>
         </div>
@@ -343,11 +374,12 @@ function HomeComp({ query, setQuery, onCategory, profileName, onAvatar }: { quer
             <button onClick={() => scrollToId('team')}>See All</button>
           </div>
           <div className="spec-grid">
-            {TEAM.filter((t) => ['Maxon Epston', 'Kashish Gupta'].includes(t.name)).map((t) => (
-              <button key={t.name} className="spec-card" onClick={() => scrollToId('team')}>
-                <img src={t.img} alt={`Portrait placeholder for ${t.name} (dummy photo)`} style={{ width: 58, height: 58, borderRadius: '50%', objectFit: 'cover', flex: 'none' }} />
-                <span><h4>{t.name}</h4><p>{t.role}</p></span>
-                <span className="go"><ArrowRight size={17} /></span>
+            {TEAM.filter((t) => ['Maxon Epston', 'Kashish Gupta'].includes(t.name)).map((t, i) => (
+              <button key={t.name} className={`spec-card${i === 1 ? ' mint' : ''}`} onClick={() => scrollToId('team')}>
+                <img className="spec-photo" src={t.img} alt={`Portrait placeholder (dummy photo — not ${t.name})`} />
+                <h4>{t.name}</h4>
+                <p>{t.name === 'Kashish Gupta' ? 'Implantation & Hairline' : t.role}</p>
+                <span className="go"><ArrowUpRight size={16} /></span>
               </button>
             ))}
           </div>
@@ -355,23 +387,22 @@ function HomeComp({ query, setQuery, onCategory, profileName, onAvatar }: { quer
 
         <div className="exclusive">
           <div className="txt">
-            <span className="overline" style={{ color: '#BFE3CC' }}>Exclusive at Hair Haven</span>
-            <h3>BioSapphire FUE — our most advanced technique</h3>
-            <p>Sapphire micro-channels for denser packing and faster healing, planned after an in-clinic assessment.</p>
-            <button className="btn btn-chip" onClick={() => onCategory('Advanced BioSapphire FUE')}>Book Now <span className="chip dark"><ArrowRight size={16} /></span></button>
+            <h3>Start with a Consultation</h3>
+            <p>Meet the team at Channi Himmat, Jammu</p>
+            <button className="btn" onClick={() => scrollToId('book')}>Book a Consultation <ArrowUpRight size={14} /></button>
           </div>
-          <img src="/img/scene-clinic.jpg" alt="Hair Haven clinic interior (dummy photo)" />
+          <div className="ph"><img src="/img/scene-clinic.jpg" alt="Clinic interior (dummy photo)" /></div>
         </div>
 
-        <div style={{ marginTop: 32 }}>
+        <div style={{ marginTop: 26 }}>
           <div className="sec-row">
-            <h2>Popular Categories</h2>
+            <h2 style={{ fontSize: '1.125rem' }}>Popular Categories</h2>
             <button onClick={() => scrollToId('services')}>See All</button>
           </div>
           <div className="pop-row">
             {pops.map((p) => (
               <button key={p.label} className="pop-tile" onClick={() => onCategory(p.service)}>
-                <span className="ic"><ServiceIcon k={p.icon} /></span>{p.label}
+                <span className="ic" style={{ background: p.tint }}><ServiceIcon k={p.icon} /></span>{p.label}
               </button>
             ))}
           </div>
@@ -383,17 +414,18 @@ function HomeComp({ query, setQuery, onCategory, profileName, onAvatar }: { quer
               <div className="ph">
                 <img src={c.img} alt={`${c.title} (dummy photo)`} loading="lazy" />
                 <button className={`heart${liked[c.title] ? ' on' : ''}`} aria-label={`Save ${c.title}`} aria-pressed={!!liked[c.title]} onClick={() => setLiked({ ...liked, [c.title]: !liked[c.title] })}>
-                  <Heart size={17} fill={liked[c.title] ? 'currentColor' : 'none'} />
+                  <Heart size={16} fill={liked[c.title] ? 'currentColor' : 'none'} />
                 </button>
-                <span className="dummy-tag">Dummy photo</span>
               </div>
+              <p className="nm">{c.title}</p>
               <div className="ft">
-                <span><b>{c.title}</b><small>{c.sub}</small></span>
-                <button className="go" aria-label={`Open ${c.title}`} onClick={() => (c.service ? onCategory(c.service) : scrollToId('contact'))}><ArrowRight size={17} /></button>
+                <span className="pr">{c.price}</span>
+                <button className="go" aria-label={`Book ${c.title}`} onClick={() => onCategory(c.service)}><ArrowUpRight size={16} /></button>
               </div>
             </article>
           ))}
         </div>
+        <p className="small muted" style={{ marginTop: 12 }}>Prices are the clinic&apos;s published starting prices — your final plan and price are confirmed at consultation.</p>
       </div>
     </section>
   )
@@ -401,7 +433,7 @@ function HomeComp({ query, setQuery, onCategory, profileName, onAvatar }: { quer
 
 /* ───────────────────────── Doctor profile (v3) ───────────────────────── */
 function DoctorProfile({ onBookVisit, toast }: { onBookVisit: (date: string, slot: string) => void; toast: (m: string) => void }) {
-  const days = useMemoDays()
+  const days = useMemoDays(7)
   const [selDate, setSelDate] = useState(days[0].iso)
   const [selSlot, setSelSlot] = useState('10:00 AM')
   const [liked, setLiked] = useState(false)
@@ -413,70 +445,86 @@ function DoctorProfile({ onBookVisit, toast }: { onBookVisit: (date: string, slo
   return (
     <section id="doctor">
       <div className="container">
-        <div className="profile-top">
-          <button className="circle-btn" aria-label="Back to top" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}><ArrowLeft size={19} /></button>
-          <span style={{ fontWeight: 700 }}>Doctor Profile</span>
-          <span style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
-            <button className={`circle-btn${liked ? ' on' : ''}`} aria-label="Save doctor" aria-pressed={liked} onClick={() => setLiked(!liked)}><Heart size={18} fill={liked ? 'currentColor' : 'none'} /></button>
-            <button className="circle-btn" aria-label="Share this page" onClick={share}><Share2 size={18} /></button>
-          </span>
+        <div className="profile-hero">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <button className="circle-btn" aria-label="Back to top" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}><ArrowLeft size={19} /></button>
+            <span style={{ display: 'flex', gap: 10 }}>
+              <button className={`circle-btn${liked ? ' on' : ''}`} aria-label="Save doctor" aria-pressed={liked} onClick={() => setLiked(!liked)}><Heart size={18} fill={liked ? 'currentColor' : 'none'} /></button>
+              <button className="circle-btn" aria-label="Share this page" onClick={share}><Share2 size={18} /></button>
+            </span>
+          </div>
+          <div className="profile-hero-grid">
+            <div>
+              <p className="pname">Dr. Suby<br />Kakkar</p>
+              <p className="prole">Clinical Director — Hair Haven Transplant Clinic</p>
+            </div>
+            <div style={{ position: 'relative' }}>
+              <img className="pimg" src="/img/doc-suby.jpg" alt="Portrait placeholder (dummy photo — not Dr. Suby Kakkar)" />
+              <span className="dummy-tag">Dummy photo — replace with real portrait</span>
+            </div>
+          </div>
         </div>
-        <div className="profile-grid">
-          <div className="profile-photo">
-            <div className="feat-photo" style={{ minHeight: 420 }}>
-              <img src="/img/doc-suby.jpg" alt="Portrait placeholder for Dr. Suby Kakkar (dummy photo)" />
-              <span className="dummy-tag">Dummy photo — real portrait coming soon</span>
-            </div>
-            <button className="book-pill-vert" onClick={() => scrollToId('book')}>BOOK</button>
+        <div className="stats-band">
+          <div className="stat-col">
+            <span className="stat-ic" style={{ background: '#E6FBF1' }}><MapPin size={20} /></span>
+            <b>Sector 3 · Jammu</b><span>Clinic Location</span>
           </div>
-          <div>
-            <span className="overline" style={{ marginBottom: 8 }}>Clinical Director</span>
-            <h2 style={{ fontSize: '1.7rem', display: 'flex', alignItems: 'center', gap: 9 }}>Dr. Suby Kakkar <BadgeCheck size={22} className="verified" aria-label="Clinical Director" /></h2>
-            <div className="stat-row">
-              <div className="stat-cell"><span><MapPin size={13} /> Location</span><b>Sector 3, Jammu</b></div>
-              <div className="stat-cell"><span><Clock size={13} /> Hours</span><b>10–6 · 7 days</b></div>
-              <div className="stat-cell"><span><Sparkles size={13} /> Focus</span><b>FUE · BioSapphire</b></div>
-            </div>
-            <h3>About</h3>
-            <p style={{ color: 'var(--ink-2)', marginTop: 8 }}>
-              Dr. Suby Kakkar leads the clinical team at Hair Haven Transplant Clinic, Jammu — overseeing scalp
-              assessments, hair transplant procedures and growth-factor therapies. Every treatment plan at the
-              clinic is confirmed only after an in-person assessment; nothing is prescribed from photos alone.
-              {expanded && (
-                <> The clinic&apos;s approach is deliberately conservative: graft counts are estimated from your
-                actual donor density, hairlines are designed around your face and age, and non-surgical options
-                like PRP and GFC are recommended first when surgery is not yet the right step. Follow-up care —
-                wash guidance, medication reviews and growth checks — is handled by the same team that treated you.</>
-              )}
-            </p>
-            <button className="link-arrow" style={{ marginTop: 8 }} onClick={() => setExpanded(!expanded)}>{expanded ? 'Read less' : 'Read more'} <ChevronDown size={15} style={{ transform: expanded ? 'rotate(180deg)' : 'none' }} /></button>
-            <h3 style={{ marginTop: 24 }}>Available Time</h3>
-            <div className="date-chips" style={{ marginTop: 12 }} role="group" aria-label="Pick a preferred date">
-              {days.map((d) => (
-                <button key={d.iso} className="date-chip" aria-pressed={selDate === d.iso} onClick={() => setSelDate(d.iso)}>
-                  {d.label}<b>{d.day}</b>{d.mon}
-                </button>
-              ))}
-            </div>
-            <div className="slot-grid" style={{ marginTop: 14 }} role="group" aria-label="Pick a preferred time">
-              {SLOTS.map((s) => (
-                <button key={s} className="slot" aria-pressed={selSlot === s} onClick={() => setSelSlot(s)}>{s}</button>
-              ))}
-            </div>
-            <p className="small muted" style={{ marginTop: 12 }}>These are preferred times within clinic hours (10 AM – 6 PM) — the clinic confirms your exact slot personally.</p>
-            <button className="btn btn-primary btn-chip" style={{ marginTop: 18 }} onClick={() => onBookVisit(selDate, selSlot)}>
-              Book Appointment <span className="chip"><ArrowRight size={16} /></span>
-            </button>
+          <div className="stat-col">
+            <span className="stat-ic" style={{ background: '#EEF4EE', color: '#5F7F66' }}><Clock size={20} /></span>
+            <b>10–6 · Open 7 days</b><span>Clinic Hours</span>
           </div>
+          <div className="stat-col">
+            <span className="stat-ic" style={{ background: '#F4FCDD' }}><Sparkles size={20} /></span>
+            <b>FUE · BioSapphire</b><span>Hair Transplant</span>
+          </div>
+        </div>
+
+        <div style={{ marginTop: 34 }}>
+          <h3 style={{ fontSize: '1.125rem' }}>About Doctor</h3>
+          <p style={{ color: 'var(--ink-2)', marginTop: 10, fontSize: '.94rem' }}>
+            Dr. Suby Kakkar is the Clinical Director at Hair Haven Transplant Clinic, Channi Himmat, Jammu. He leads
+            consultations for hair transplant and hair restoration, and plans each patient&apos;s treatment with the
+            clinic team. Every recommendation is made after an in-person assessment of your hair loss.
+            {expanded && (
+              <> The clinic&apos;s approach is deliberately conservative: graft counts are estimated from your actual
+              donor density, hairlines are designed around your face and age, and non-surgical options like PRP and
+              GFC are recommended first when surgery is not yet the right step. Follow-up care — wash guidance,
+              medication reviews and growth checks — is handled by the same team that treated you.</>
+            )}
+          </p>
+          <button className="link-arrow" style={{ marginTop: 6 }} onClick={() => setExpanded(!expanded)}>{expanded ? 'Read less' : 'Read more'} <ChevronRight size={14} style={{ transform: expanded ? 'rotate(90deg)' : 'none' }} /></button>
+        </div>
+
+        <div style={{ marginTop: 30 }}>
+          <h3 style={{ fontSize: '1.125rem' }}>Available Time</h3>
+          <div className="date-strip2" style={{ marginTop: 14 }} role="group" aria-label="Pick a preferred date">
+            {days.map((d) => (
+              <button key={d.iso} className="date-chip" aria-pressed={selDate === d.iso} onClick={() => setSelDate(d.iso)}>
+                <b>{d.day}</b>{d.label}
+              </button>
+            ))}
+          </div>
+          <p className="overline" style={{ marginTop: 18, marginBottom: 10 }}>Preferred Slots</p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }} role="group" aria-label="Pick a preferred time">
+            {SLOTS.map((s) => (
+              <button key={s} className="slot-pill" aria-pressed={selSlot === s} onClick={() => setSelSlot(s)}>{s}</button>
+            ))}
+          </div>
+          <p className="small" style={{ marginTop: 12, display: 'flex', gap: 7, alignItems: 'center', color: 'var(--ink-2)' }}>
+            <Info size={14} style={{ color: '#5F7F66', flex: 'none' }} /> Preferred time — the clinic confirms your exact slot personally
+          </p>
+          <button className="btn btn-primary btn-chip" style={{ marginTop: 18 }} onClick={() => onBookVisit(selDate, selSlot)}>
+            Book Appointment <span className="chip"><ArrowRight size={16} /></span>
+          </button>
         </div>
       </div>
     </section>
   )
 }
-function useMemoDays() {
+function useMemoDays(count = 5) {
   const out: { label: string; day: string; mon: string; iso: string }[] = []
   const now = new Date()
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < count; i++) {
     const d = new Date(now); d.setDate(now.getDate() + i)
     out.push({
       label: d.toLocaleDateString('en-IN', { weekday: 'short' }),
@@ -658,208 +706,126 @@ interface Booking {
 const loadBookings = (): Booking[] => {
   try { return JSON.parse(localStorage.getItem('hh_bookings') || '[]') } catch { return [] }
 }
+const saveBookings = (list: Booking[]) => {
+  try { localStorage.setItem('hh_bookings', JSON.stringify(list)) } catch { /* storage unavailable */ }
+}
 
-function BookingSection({ prefill, toast }: { prefill: { service?: string; date?: string; slot?: string; notes?: string; nonce: number }; toast: (m: string) => void }) {
-  const [step, setStep] = useState(1)
-  const [service, setService] = useState('FUE Hair Transplant')
-  const [mode, setMode] = useState('In-clinic')
+function BookingSection({ prefill, toast, profileName }: { prefill: { service?: string; date?: string; slot?: string; nonce: number }; toast: (m: string) => void; profileName: string }) {
+  const days = useMemoDays(7)
+  const [treatment, setTreatment] = useState('Consultation')
   const [date, setDate] = useState('')
   const [slot, setSlot] = useState('')
-  const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [email, setEmail] = useState('')
-  const [notes, setNotes] = useState('')
-  const [errors, setErrors] = useState<Record<string, string>>({})
   const [done, setDone] = useState<Booking | null>(null)
-  const [mine, setMine] = useState<Booking[]>(loadBookings)
+  const [list, setList] = useState<Booking[]>(() => loadBookings())
+  const stripRef = (el: HTMLDivElement | null) => { if (el) el.dataset.strip = '1' }
 
   useEffect(() => {
-    if (prefill.nonce === 0) return
-    if (prefill.service) setService(prefill.service)
+    if (!prefill.nonce) return
+    if (prefill.service) setTreatment(prefill.service)
     if (prefill.date) setDate(prefill.date)
     if (prefill.slot) setSlot(prefill.slot)
-    if (prefill.notes) setNotes(prefill.notes)
-    setDone(null); setStep(1)
+    setDone(null)
   }, [prefill])
 
-  const todayIso = new Date().toISOString().slice(0, 10)
+  const monthName = new Date(days[0].iso + 'T12:00:00').toLocaleDateString('en-IN', { month: 'long' })
+  const fmtDay = (iso: string) => new Date(iso + 'T12:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })
 
-  const validateStep2 = () => {
-    const e: Record<string, string> = {}
-    if (!date) e.date = 'Please pick a preferred date.'
-    else if (date < todayIso) e.date = 'Please pick a date from today onwards.'
-    if (!slot) e.slot = 'Please pick a preferred time.'
-    setErrors(e); return Object.keys(e).length === 0
-  }
-  const validateStep3 = () => {
-    const e: Record<string, string> = {}
-    if (name.trim().length < 3) e.name = 'Please enter your full name.'
-    const digits = phone.replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '')
-    if (!/^[6-9]\d{9}$/.test(digits)) e.phone = 'Please enter a valid 10-digit Indian mobile number.'
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = 'That email address does not look complete.'
-    setErrors(e); return Object.keys(e).length === 0
-  }
-
-  const submit = () => {
-    if (!validateStep3()) return
-    const booking: Booking = {
+  const request = () => {
+    if (!date || !slot) return
+    const rec: Booking = {
       id: 'HH-' + Math.random().toString(36).slice(2, 8).toUpperCase(),
-      name: name.trim(), phone: phone.trim(), email: email.trim(), service, mode, date, slot,
-      notes: notes.trim(), createdAt: new Date().toISOString(), status: 'Request sent — awaiting clinic confirmation',
+      name: profileName, phone: '', email: '', service: treatment, mode: 'In-clinic', date, slot, notes: '', createdAt: new Date().toISOString(), status: 'Requested',
     }
-    const all = [booking, ...loadBookings()]
-    localStorage.setItem('hh_bookings', JSON.stringify(all))
-    setMine(all); setDone(booking); setStep(4)
-    toast('Booking request saved. Send it to the clinic on WhatsApp to confirm fastest.')
+    const next = [rec, ...list]
+    setList(next); saveBookings(next); setDone(rec)
   }
-
-  const cancelMine = (id: string) => {
-    const all = mine.map((b) => (b.id === id ? { ...b, status: 'Cancelled by patient' } : b))
-    localStorage.setItem('hh_bookings', JSON.stringify(all)); setMine(all)
-    toast('That request was marked cancelled on this device.')
+  const cancel = (id: string) => {
+    const next = list.filter((b) => b.id !== id)
+    setList(next); saveBookings(next); toast('Request cancelled.')
   }
-
-  const waText = done
-    ? `Hello Hair Haven, I would like to book a consultation.\n\nName: ${done.name}\nPhone: ${done.phone}\nService: ${done.service}\nMode: ${done.mode}\nPreferred: ${done.date} at ${done.slot}\nReference: ${done.id}${done.notes ? `\nNotes: ${done.notes}` : ''}`
-    : ''
+  const viewCalendar = () => {
+    const el = document.querySelector<HTMLDivElement>('[data-strip="1"]')
+    el?.scrollTo({ left: el.scrollWidth, behavior: 'smooth' })
+  }
 
   return (
     <section id="book">
       <div className="container">
         <div className="section-head">
-          <span className="overline">Appointments</span>
-          <h2>Book your consultation</h2>
-          <p>Three quick steps. You choose a <strong>preferred</strong> date and time — the clinic confirms your exact appointment personally on call or WhatsApp. Nothing is auto-confirmed.</p>
+          <span className="overline">Book Consultation</span>
+          <h2>Request an appointment</h2>
+          <p>Pick a preferred date and time — the clinic confirms your exact slot personally on call or WhatsApp. Nothing here is a confirmed booking yet.</p>
         </div>
-        <div className="book-grid">
-          <div className="panel">
-            <div className="info-banner"><Clock size={17} /><span><strong>Live schedule:</strong> the clinic is open 10:00 AM – 6:00 PM, 7 days. Times in step 2 are <strong>preferred slots</strong> — the clinic confirms live availability personally on call or WhatsApp.</span></div>
-            {step < 4 && (
-              <div className="steps" aria-label="Booking progress">
-                {['Service', 'Date & time', 'Your details'].map((label, i) => (
-                  <span key={label} className={`step-dot${step === i + 1 ? ' on' : ''}`}>{i + 1}. {label}</span>
+        <div className="sheet">
+          <span className="sheet-pill" aria-hidden="true">Book Appointment</span>
+          {done ? (
+            <div className="confirm-c">
+              <span className="ok-ring"><Check size={32} /></span>
+              <h3 style={{ fontSize: '1.35rem', marginTop: 18 }}>Appointment requested</h3>
+              <p style={{ fontWeight: 650, marginTop: 10 }}>Dr. Suby Kakkar · {fmtDay(done.date)} · {done.slot}</p>
+              <p className="small" style={{ color: 'var(--ink-2)', maxWidth: 300, margin: '10px auto 0' }}>
+                The clinic will confirm your exact slot personally on call or WhatsApp. This is a request, not a confirmed booking.
+              </p>
+              <p className="small muted" style={{ marginTop: 12 }}>Reference: <strong style={{ color: 'var(--ink)' }}>{done.id}</strong> · {done.service}</p>
+              <button className="btn btn-primary" style={{ width: '100%', marginTop: 22, minHeight: 56 }} onClick={() => { setDone(null); scrollToId('home') }}>Done</button>
+              <button className="link-arrow" style={{ marginTop: 16 }} onClick={() => scrollToId('my-requests')}>View My Appointments</button>
+            </div>
+          ) : (
+            <>
+              <div className="grab" />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                <h3 style={{ fontSize: '1.25rem' }}>Book Appointment</h3>
+                <button className="circle-btn" style={{ width: 36, height: 36, background: '#F4F3EE', border: 'none' }} aria-label="Close booking" onClick={() => scrollToId('doctor')}><X size={16} /></button>
+              </div>
+              <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginTop: 18 }}>
+                <img src="/img/doc-suby.jpg" alt="Portrait placeholder (dummy photo)" style={{ width: 56, height: 56, borderRadius: 16, objectFit: 'cover', objectPosition: 'top' }} />
+                <div>
+                  <b style={{ display: 'block' }}>Dr. Suby Kakkar</b>
+                  <span className="small muted">Clinical Director · Hair Haven</span>
+                  <span className="small" style={{ display: 'block', color: 'var(--forest)', fontWeight: 650 }}>Treatment: {treatment}</span>
+                </div>
+                <button className="btn" disabled style={{ marginLeft: 'auto', minHeight: 36, padding: '0 14px', fontSize: '.82rem', background: '#F4F3EE', color: 'var(--ink-3)' }}>Change</button>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 24 }}>
+                <b>{monthName}</b>
+                <button className="link-arrow" onClick={viewCalendar}>View Full Calendar</button>
+              </div>
+              <div className="date-strip2" style={{ marginTop: 10 }} ref={stripRef} role="group" aria-label="Pick a preferred date">
+                {days.map((d) => (
+                  <button key={d.iso} className="date-chip" aria-pressed={date === d.iso} onClick={() => setDate(d.iso)}>
+                    <b>{d.day}</b>{d.label}
+                  </button>
                 ))}
               </div>
-            )}
-
-            {step === 1 && (
-              <div>
-                <div className="field">
-                  <label htmlFor="bk-service">What would you like to consult about?</label>
-                  <select id="bk-service" value={service} onChange={(e) => setService(e.target.value)}>
-                    {BOOKABLE.map((s) => <option key={s}>{s}</option>)}
-                  </select>
-                </div>
-                <div className="field">
-                  <label>Consultation mode</label>
-                  <div className="seg" role="group" aria-label="Consultation mode">
-                    {['In-clinic', 'Online'].map((m) => (
-                      <button key={m} aria-pressed={mode === m} onClick={() => setMode(m)}>{m}</button>
-                    ))}
-                  </div>
-                  <p className="small muted" style={{ marginTop: 7 }}>{mode === 'In-clinic' ? 'At 606/B, Sector 3, Channi Himmat, Jammu.' : 'The clinic will share the call details once your appointment is confirmed.'}</p>
-                </div>
-                <button className="btn btn-primary btn-block" onClick={() => setStep(2)}>Continue <ArrowRight size={16} /></button>
+              <h4 style={{ fontSize: '1rem', marginTop: 20 }}>Select a Time</h4>
+              <div className="slot-grid" style={{ marginTop: 12 }} role="group" aria-label="Preferred time slots">
+                {SLOTS.map((s) => (
+                  <button key={s} className="slot" aria-pressed={slot === s} onClick={() => setSlot(s)}>{s}</button>
+                ))}
               </div>
-            )}
+              <p className="small" style={{ marginTop: 12, display: 'flex', gap: 7, alignItems: 'center', color: 'var(--ink-2)' }}>
+                <Info size={14} style={{ color: '#5F7F66', flex: 'none' }} /> Preferred time — the clinic confirms your exact slot personally
+              </p>
+              <button className="btn btn-primary btn-chip" style={{ width: '100%', marginTop: 20, minHeight: 56 }} disabled={!date || !slot} onClick={request}>
+                Request Appointment {date && slot && <span className="chip"><ArrowRight size={16} /></span>}
+              </button>
+            </>
+          )}
+        </div>
 
-            {step === 2 && (
-              <div>
-                <div className="field">
-                  <label htmlFor="bk-date">Preferred date</label>
-                  <input id="bk-date" type="date" min={todayIso} value={date} onChange={(e) => setDate(e.target.value)} />
-                  {errors.date && <p className="err">{errors.date}</p>}
-                </div>
-                <div className="field">
-                  <label>Preferred time (clinic hours 10 AM – 6 PM)</label>
-                  <div className="slot-grid" role="group" aria-label="Preferred time slots">
-                    {SLOTS.map((s) => (
-                      <button key={s} className="slot" aria-pressed={slot === s} onClick={() => setSlot(s)}>{s}</button>
-                    ))}
-                  </div>
-                  {errors.slot && <p className="err">{errors.slot}</p>}
-                </div>
-                <div style={{ display: 'flex', gap: 10 }}>
-                  <button className="btn btn-soft" onClick={() => setStep(1)}>Back</button>
-                  <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => validateStep2() && setStep(3)}>Continue <ArrowRight size={16} /></button>
-                </div>
-              </div>
-            )}
-
-            {step === 3 && (
-              <div>
-                <div className="field">
-                  <label htmlFor="bk-name">Full name *</label>
-                  <input id="bk-name" type="text" autoComplete="name" placeholder="Your full name" value={name} onChange={(e) => setName(e.target.value)} />
-                  {errors.name && <p className="err">{errors.name}</p>}
-                </div>
-                <div className="field">
-                  <label htmlFor="bk-phone">Mobile number (WhatsApp) *</label>
-                  <input id="bk-phone" type="tel" autoComplete="tel" placeholder="e.g. 98765 43210" value={phone} onChange={(e) => setPhone(e.target.value)} />
-                  {errors.phone && <p className="err">{errors.phone}</p>}
-                </div>
-                <div className="field">
-                  <label htmlFor="bk-email">Email (optional)</label>
-                  <input id="bk-email" type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-                  {errors.email && <p className="err">{errors.email}</p>}
-                </div>
-                <div className="field">
-                  <label htmlFor="bk-notes">Anything we should know? (optional)</label>
-                  <textarea id="bk-notes" rows={3} placeholder="Hair loss history, previous treatments, questions…" value={notes} onChange={(e) => setNotes(e.target.value)} />
-                </div>
-                <div style={{ display: 'flex', gap: 10 }}>
-                  <button className="btn btn-soft" onClick={() => setStep(2)}>Back</button>
-                  <button className="btn btn-primary" style={{ flex: 1 }} onClick={submit}><CalendarCheck size={17} /> Send Booking Request</button>
-                </div>
-                <p className="small muted" style={{ marginTop: 11 }}>Your details stay on this device and are shared with the clinic only when you tap the WhatsApp button on the next screen (or call us). No account, no password.</p>
-              </div>
-            )}
-
-            {step === 4 && done && (
-              <div>
-                <span className="success-badge"><CheckCircle2 size={32} /></span>
-                <h3 style={{ fontSize: '1.3rem' }}>Appointment requested, {done.name.split(' ')[0]}!</h3>
-                <p style={{ color: 'var(--ink-2)', marginTop: 7 }}>Reference <strong>{done.id}</strong>. This is a <strong>request, not a confirmed appointment</strong> — the clinic confirms your exact slot personally. Fastest way: send the request to the clinic on WhatsApp now.</p>
-                <div style={{ marginTop: 14 }}>
-                  <div className="kv"><span>Service</span><b>{done.service}</b></div>
-                  <div className="kv"><span>Mode</span><b>{done.mode}</b></div>
-                  <div className="kv"><span>Preferred</span><b>{done.date} · {done.slot}</b></div>
-                  <div className="kv"><span>Status</span><b>{done.status}</b></div>
-                </div>
-                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 18 }}>
-                  <a className="btn btn-wa" href={waLink(waText)} target="_blank" rel="noreferrer"><MessageCircle size={17} /> Send to Clinic on WhatsApp</a>
-                  <button className="btn btn-soft" onClick={() => { setDone(null); setStep(1) }}>Make Another Request</button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <aside>
-            <div className="side-note">
-              <h3 style={{ display: 'flex', gap: 8, alignItems: 'center' }}><Phone size={18} /> Prefer to talk?</h3>
-              <p className="small" style={{ color: 'var(--ink-2)', margin: '8px 0 16px' }}>Call or WhatsApp the clinic directly — a real person from our team will help you.</p>
-              <a className="btn btn-primary btn-block" href={CLINIC.phoneLink} style={{ marginBottom: 9 }}>Call {CLINIC.phoneDisplay}</a>
-              <a className="btn btn-soft btn-block" href={waLink('Hello Hair Haven, I have a question.')} target="_blank" rel="noreferrer">WhatsApp Us</a>
-              <div style={{ marginTop: 10 }}>
-                <div className="kv"><span><Clock size={13} /> Hours</span><b>10 AM – 6 PM, daily</b></div>
-                <div className="kv"><span><MapPin size={13} /> Clinic</span><b>Channi Himmat, Jammu</b></div>
-              </div>
-            </div>
-            <hr className="divider" />
-            <div className="side-note">
-              <h3>My requests on this device</h3>
-              {mine.length === 0 && <p className="small muted">No requests yet. When you book, your requests will appear here so you can re-check the details any time.</p>}
-              {mine.slice(0, 4).map((b) => (
-                <div className="req-item" key={b.id}>
+        <div id="my-requests" style={{ marginTop: 34 }}>
+          <h3 style={{ fontSize: '1.1rem', marginBottom: 6 }}>My requests on this device</h3>
+          {list.length === 0
+            ? <p className="small muted">No requests yet — your appointment requests will appear here.</p>
+            : list.map((b) => (
+              <article className="booking-item" key={b.id}>
+                <div>
                   <b>{b.service}</b>
-                  <p className="small muted">{b.date} · {b.slot} · {b.mode}<br />Ref {b.id} — {b.status}</p>
-                  {b.status.startsWith('Request sent') && (
-                    <button className="btn btn-soft" style={{ minHeight: 36, padding: '6px 13px', fontSize: '.8rem', marginTop: 8 }} onClick={() => cancelMine(b.id)}>Cancel this request</button>
-                  )}
+                  <span className="small muted" style={{ display: 'block' }}>{fmtDay(b.date)} · {b.slot} · Ref {b.id} · Requested — awaiting clinic confirmation</span>
                 </div>
-              ))}
-            </div>
-          </aside>
+                <button className="btn btn-ghost" style={{ minHeight: 40, padding: '0 16px', fontSize: '.85rem' }} onClick={() => cancel(b.id)}>Cancel</button>
+              </article>
+            ))}
         </div>
       </div>
     </section>
@@ -1051,7 +1017,7 @@ function BottomNav() {
         <a
           key={id}
           href={`#${id}`}
-          className={active === id ? 'active' : undefined}
+          className={`${active === id ? 'active' : ''}${id === 'results' ? ' heart-tab' : ''}`.trim() || undefined}
           aria-current={active === id ? 'page' : undefined}
           onClick={(e) => { e.preventDefault(); setActive(id); if (id === 'top') window.scrollTo({ top: 0, behavior: 'smooth' }); else scrollToId(id) }}
         >
@@ -1079,13 +1045,10 @@ export default function App() {
     toast('Date and time carried into your booking — add your details to finish the request.')
   }
 
-  const bookEstimate = (n: Norwood) => {
-    setPrefill({
-      service: 'FUE Hair Transplant',
-      notes: `Norwood self-assessment: Stage ${n.stage} (${n.name}). Estimated grafts: ${n.grafts}. (Preliminary — to be confirmed at assessment.)`,
-      nonce: Date.now(),
-    })
+  const bookEstimate = (_n: Norwood) => {
+    setPrefill({ service: 'FUE Hair Transplant', nonce: Date.now() })
     scrollToId('book')
+    toast('Your estimate is preliminary — the clinic confirms grafts and plan at your assessment.')
   }
 
   return (
@@ -1102,7 +1065,7 @@ export default function App() {
         <Process />
         <Team />
         <Calculator onBookEstimate={bookEstimate} />
-        <BookingSection prefill={prefill} toast={toast} />
+        <BookingSection prefill={prefill} toast={toast} profileName={profile ? profile.name : 'Guest'} />
         <Results />
         <Journey />
         <Faq />
