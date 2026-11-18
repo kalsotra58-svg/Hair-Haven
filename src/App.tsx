@@ -3,6 +3,7 @@ import {
   Phone, MapPin, Clock, Calendar, Star, Check, ChevronDown, Menu, X, ArrowRight,
   MessageCircle, Sparkles, Shield, Heart, Stethoscope, Scissors, Leaf, Eye,
   CalendarCheck, Camera, AlertCircle, CheckCircle2, Navigation, AtSign, Droplets, Home,
+  Calculator as CalculatorIcon, TrendingUp, User,
 } from 'lucide-react'
 
 /* ── Clinic data — extracted verbatim from the existing Hair Haven repository.
@@ -729,13 +730,42 @@ function Footer() {
 }
 
 function BottomNav() {
+  const tabs = [
+    { id: 'top', label: 'Home', Icon: Home },
+    { id: 'calculator', label: 'Assess', Icon: CalculatorIcon },
+    { id: 'book', label: 'Appointments', Icon: CalendarCheck },
+    { id: 'journey', label: 'Journey', Icon: TrendingUp },
+    { id: 'contact', label: 'Profile', Icon: User },
+  ]
+  const [active, setActive] = useState('top')
+  useEffect(() => {
+    const onScroll = () => {
+      const probe = window.scrollY + window.innerHeight * 0.4
+      let current = 'top'
+      tabs.forEach((t) => {
+        const el = document.getElementById(t.id)
+        if (el && el.getBoundingClientRect().top + window.scrollY <= probe) current = t.id
+      })
+      setActive(current)
+    }
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   return (
     <nav className="bottom-nav" aria-label="Quick navigation">
-      <a href="#top" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }}><Home size={20} />Home</a>
-      <a href="#services" onClick={(e) => { e.preventDefault(); scrollToId('services') }}><Stethoscope size={20} />Services</a>
-      <a href="#book" className="book" onClick={(e) => { e.preventDefault(); scrollToId('book') }}><span className="fab"><Calendar size={23} /></span>Book</a>
-      <a href="#journey" onClick={(e) => { e.preventDefault(); scrollToId('journey') }}><Camera size={20} />Journey</a>
-      <a href="#contact" onClick={(e) => { e.preventDefault(); scrollToId('contact') }}><MapPin size={20} />Visit</a>
+      {tabs.map(({ id, label, Icon }) => (
+        <a
+          key={id}
+          href={`#${id}`}
+          className={active === id ? 'active' : undefined}
+          aria-current={active === id ? 'page' : undefined}
+          onClick={(e) => { e.preventDefault(); setActive(id); if (id === 'top') window.scrollTo({ top: 0, behavior: 'smooth' }); else scrollToId(id) }}
+        >
+          <span className="tab-ic"><Icon size={21} /></span>{label}
+        </a>
+      ))}
     </nav>
   )
 }
