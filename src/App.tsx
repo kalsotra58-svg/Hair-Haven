@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
-  Phone, MapPin, Clock, Calendar, Star, Check, ChevronDown, Menu, X, ArrowRight,
+  Phone, MapPin, Clock, ChevronDown, Menu, X, ArrowRight,
   MessageCircle, Sparkles, Shield, Heart, Stethoscope, Scissors, Leaf, Eye,
   CalendarCheck, Camera, AlertCircle, CheckCircle2, Navigation, AtSign, Droplets, Home,
   Calculator as CalculatorIcon, TrendingUp, User,
@@ -57,11 +57,14 @@ const PROCESS = [
   { step: '04', title: 'Result', desc: 'Natural-looking, dense hair growth and a complete restoration of confidence.', img: 'process-4.png' },
 ]
 
+/* Roles only, per v2 spec: qualifications in the source repo are inconsistent
+   (e.g. Dr Kakkar appears as both "E. Dermatology, Germany" and "MD Dermatology")
+   and are held for clinic verification before publishing. */
 const TEAM = [
-  { initials: 'SK', name: 'Dr. Suby Kakkar', role: 'Clinical Director', qual: 'MBBS, E. Dermatology, Germany', bio: 'Ex-Consultant, Max Hospital Delhi. Highly experienced in advanced dermatological therapies.' },
-  { initials: 'ME', name: 'Maxon Epston', role: 'Master Technician', qual: 'Hair Transplant & PRP Procedure Specialist', bio: 'Expert in hair extraction, PRP growth therapies, and advanced surgical support procedures.' },
-  { initials: 'KG', name: 'Kashish Gupta', role: 'Senior Implanter', qual: 'Experienced Implanter', bio: 'Skilled in precise graft implantation and natural hairline work with years of hands-on expertise.' },
-  { initials: 'RB', name: 'Ronika Bhardwaj', role: 'Patient Care Coordinator', qual: 'Follow-ups & Leads', bio: 'Manages post-transplant recovery logs, patient check-ups, and guides incoming clinical leads.' },
+  { initials: 'SK', name: 'Dr. Suby Kakkar', role: 'Clinical Director' },
+  { initials: 'ME', name: 'Maxon Epston', role: 'Hair Transplant & PRP' },
+  { initials: 'KG', name: 'Kashish Gupta', role: 'Graft Implantation & Hairline' },
+  { initials: 'RB', name: 'Ronika Bhardwaj', role: 'Follow-ups & Patient Care' },
 ]
 
 interface Norwood { stage: number; name: string; description: string; grafts: string; priceRange: string; density: string; duration: string; recovery: string }
@@ -78,15 +81,6 @@ const NORWOOD: Norwood[] = [
 const SLOTS = ['10:00 AM', '11:30 AM', '01:00 PM', '03:00 PM', '04:30 PM']
 const BOOKABLE = ['FUE Hair Transplant', 'Advanced BioSapphire FUE', 'PRP Therapy', 'GFC Therapy', 'Beard Transplant', 'Eyebrow Transplant', 'General Hair Loss Consultation']
 
-const REVIEWS = [
-  { name: 'Manmohan Singh', tag: 'Attentive Care', when: '1 week ago', quote: 'That was the best experience of my life, it gave me new life, thank you Hair Haven — the best staff and people treating.' },
-  { name: 'Vishwa Nath', tag: 'Clean & Hygienic', when: '3 months ago', quote: 'Clean & hygienic, sterilized equipment. As far as the result is concerned it is very good. The staff is too good.' },
-  { name: 'Shubam Sakolia', tag: 'Speedy Recovery', when: '1 month ago', quote: 'I recently visited Hair Haven in Channi Himmat, and I must say, it was a delightful experience! The ambiance is wonderful and the results are amazing.' },
-  { name: 'Saleem', tag: 'Attentive Care', when: '2 months ago', quote: 'I am really satisfied with the behaviour of staff members and work… my results are very good. I am very happy.' },
-]
-
-const GALLERY = ['image.png', 'image copy.png', 'image copy 2.png', 'image copy 3.png', 'image copy 4.png', 'image copy 5.png', 'image copy 6.png', 'image copy 7.png', 'image copy 8.png', 'image copy 9.png', 'image copy 10.png', 'image copy 11.png', 'image copy 12.png', 'image copy 13.png']
-
 const JOURNEY = [
   { when: 'Day 0', title: 'Procedure day', desc: 'Local anesthesia, graft harvest and implantation. You go home the same day with your aftercare kit and instructions.' },
   { when: 'Days 1–3', title: 'Rest & gentle care', desc: 'Mild swelling is common. Sleep with your head elevated and follow the clinic’s scalp-care instructions exactly.' },
@@ -100,8 +94,8 @@ const JOURNEY = [
 const FAQS = [
   { q: 'Is FUE hair transplant painful?', a: 'The procedure is performed under local anesthesia, administered for a comfortable experience. Most patients report only mild discomfort during recovery, which typically lasts 3–5 days for temple work and 7–10 days for crown work.' },
   { q: 'How long does recovery take?', a: 'The scalp typically heals completely in 10–14 days. New hair starts growing in 3–4 months, with full density usually achieved in 8–12 months.' },
-  { q: 'What is the difference between PRP and GFC therapy?', a: 'PRP uses platelet-rich plasma from your own blood to strengthen roots and reduce hair fall (₹2,000/session at Hair Haven). GFC is a more concentrated growth-factor preparation aimed at improving thickness (₹4,500/session). The clinical team will advise which suits your stage.' },
-  { q: 'How much does a hair transplant cost?', a: 'It depends mainly on the grafts you need. Indicative clinic pricing starts at ₹21,000 for early-stage FUE and ₹31,000 for BioSapphire FUE. Use the Norwood estimator on this page for a preliminary range — your final plan and price are confirmed only after an in-clinic assessment.' },
+  { q: 'What is the difference between PRP and GFC therapy?', a: 'PRP uses platelet-rich plasma from your own blood to strengthen roots and reduce hair fall. GFC is a more concentrated growth-factor preparation aimed at improving thickness. The clinical team will advise which suits your stage.' },
+  { q: 'How much does a hair transplant cost?', a: 'It depends mainly on the grafts you need and the technique chosen. Use the Norwood estimator on this page for a preliminary graft range — your final plan and exact price are confirmed only after an in-clinic assessment, never quoted sight-unseen.' },
   { q: 'Do you also do beard and eyebrow transplants?', a: 'Yes. Beard and eyebrow transplants are specialised procedures offered at Hair Haven with custom pricing based on the grafts and design required.' },
   { q: 'How do I book a consultation?', a: 'Use the booking form on this page, call or WhatsApp us on +91 88997 08659. Choose a preferred date and time — the clinic confirms your exact appointment personally, so nothing is ever auto-confirmed by a computer.' },
 ]
@@ -113,7 +107,7 @@ function scrollToId(id: string) {
 /* ───────────────────────── Header ───────────────────────── */
 function Header() {
   const [open, setOpen] = useState(false)
-  const links: [string, string][] = [['Services', 'services'], ['Process', 'process'], ['Team', 'team'], ['Results', 'results'], ['Contact', 'contact']]
+  const links: [string, string][] = [['Services', 'services'], ['Team', 'team'], ['Gallery', 'results'], ['Journey', 'journey'], ['Contact', 'contact']]
   return (
     <header className="header">
       <div className="container header-in">
@@ -128,44 +122,29 @@ function Header() {
         </nav>
         <div className="header-cta">
           <a className="header-phone" href={CLINIC.phoneLink}><Phone size={16} /> {CLINIC.phoneDisplay}</a>
-          <button className="btn btn-primary" onClick={() => scrollToId('book')}>Book Consultation</button>
+          <button className="btn btn-primary" onClick={() => scrollToId('book')}>Book a Consultation</button>
           <button className="icon-btn menu-btn" onClick={() => setOpen(!open)} aria-label="Toggle menu" aria-expanded={open}>{open ? <X size={20} /> : <Menu size={20} />}</button>
         </div>
+        <button className="btn btn-primary header-mobile-cta" onClick={() => scrollToId('book')}>Book a Consultation</button>
       </div>
     </header>
   )
 }
 
 /* ───────────────────────── Hero ───────────────────────── */
-function Hero({ onPickDate }: { onPickDate: (iso: string) => void }) {
-  const days = useMemo(() => {
-    const out: { label: string; day: string; iso: string; today: boolean }[] = []
-    const now = new Date()
-    for (let i = 0; i < 5; i++) {
-      const d = new Date(now); d.setDate(now.getDate() + i)
-      out.push({
-        label: d.toLocaleDateString('en-IN', { weekday: 'short' }),
-        day: String(d.getDate()),
-        iso: d.toISOString().slice(0, 10),
-        today: i === 0,
-      })
-    }
-    return out
-  }, [])
+function Hero() {
   return (
     <div className="hero" id="top">
       <div className="container hero-grid">
         <div>
-          <span className="overline">Hair Restoration · Channi Himmat, Jammu</span>
-          <h1>The Art &amp; Science of <em>Hair Restoration</em></h1>
-          <p className="lead" style={{ marginTop: 20 }}>
-            Welcome to Hair Haven, Jammu&apos;s premium hair restoration clinic. We combine advanced FUE graft
-            techniques and growth-factor therapies to craft customised, natural-looking hairlines that restore
-            both density and confidence.
+          <span className="overline">Channi Himmat, Jammu</span>
+          <h1>Hair restoration, planned with care.</h1>
+          <p className="lead" style={{ marginTop: 18 }}>
+            FUE, BioSapphire FUE, PRP and GFC treatments — every plan begins with an honest assessment of your hair loss.
           </p>
           <div className="hero-ctas">
             <button className="btn btn-primary" onClick={() => scrollToId('book')}>Book a Consultation <ArrowRight size={17} /></button>
-            <button className="link-arrow" onClick={() => scrollToId('calculator')}>Estimate my grafts <ArrowRight size={16} /></button>
+            <button className="link-arrow" onClick={() => scrollToId('calculator')}>Start hair analysis <ArrowRight size={16} /></button>
           </div>
           <div className="hero-meta">
             <span><MapPin size={16} /> Sector 3, Channi Himmat</span>
@@ -174,24 +153,8 @@ function Hero({ onPickDate }: { onPickDate: (iso: string) => void }) {
           </div>
         </div>
         <div className="hero-photo">
-          <img src={asset('doctor-avatar.png')} alt="Dr. Suby Kakkar, Clinical Director of Hair Haven" />
-          <div className="hero-book">
-            <div className="who">
-              <img src={asset('doctor-avatar.png')} alt="" aria-hidden="true" />
-              <div>
-                <h3>Dr. Suby Kakkar</h3>
-                <p>Clinical Director · MBBS, E. Dermatology, Germany · Ex-Consultant, Max Hospital Delhi</p>
-              </div>
-            </div>
-            <div className="date-strip" role="group" aria-label="Pick a consultation date">
-              {days.map((d) => (
-                <span key={d.iso} className={d.today ? 'today' : ''} onClick={() => onPickDate(d.iso)} style={{ cursor: 'pointer' }} title="Start booking for this date">
-                  {d.label}<b>{d.day}</b>
-                </span>
-              ))}
-            </div>
-            <p className="hero-note">Tap a date to start booking — the clinic confirms your exact slot personally.</p>
-          </div>
+          <img src={asset('founder.png')} alt="Harish Kalsotra, Founder of Hair Haven Transplant Clinic" />
+          <span className="hero-chip"><MapPin size={15} /> Hair Haven Transplant Clinic · Channi Himmat, Jammu</span>
         </div>
       </div>
     </div>
@@ -199,28 +162,37 @@ function Hero({ onPickDate }: { onPickDate: (iso: string) => void }) {
 }
 
 /* ───────────────────────── Services & Process ───────────────────────── */
-function Services({ onBook }: { onBook: (service: string) => void }) {
+const SERVICE_GROUPS: { name: string; titles: string[] }[] = [
+  { name: 'Hair Transplant', titles: ['FUE Hair Transplant', 'Advanced BioSapphire FUE', 'Hairline Design & Graft Estimation'] },
+  { name: 'Beard & Eyebrow', titles: ['Beard Transplant', 'Eyebrow Transplant'] },
+  { name: 'Treatments & Therapies', titles: ['PRP Therapy', 'GFC Therapy', 'Hair Regrowth Treatments', 'Scalp Assessment & Hair Analysis'] },
+]
+function Services() {
   return (
     <section id="services">
       <div className="container">
         <div className="section-head">
           <span className="overline">Our Services</span>
           <h2>Complete hair restoration, under one roof</h2>
-          <p>Surgical and non-surgical treatments, planned around your actual hair-loss stage. Prices below are the clinic&apos;s published starting prices — your final plan is confirmed at consultation.</p>
+          <p>Surgical and non-surgical treatments, planned around your actual hair-loss stage. Your treatment plan — and its cost — is confirmed only after an in-clinic assessment.</p>
         </div>
-        <div className="grid grid-3">
-          {SERVICES.map((s) => (
-            <article className="svc" key={s.title}>
-              <span className="ic"><ServiceIcon k={s.icon} /></span>
-              <h3>{s.title}</h3>
-              <p>{s.desc}</p>
-              <ul>{s.features.map((f) => <li key={f}><Check size={14} />{f}</li>)}</ul>
-              <div className="foot">
-                <span className="price">{s.price}</span>
-                <button className="book-link" onClick={() => onBook(s.title)}>Book <ArrowRight size={15} /></button>
+        {SERVICE_GROUPS.map((g) => (
+          <div className="svc-group" key={g.name}>
+            <h3>{g.name}</h3>
+            {SERVICES.filter((s) => g.titles.includes(s.title)).map((s) => (
+              <div className="svc-row" key={s.title}>
+                <span className="ic"><ServiceIcon k={s.icon} /></span>
+                <div>
+                  <h4>{s.title}</h4>
+                  <p>{s.desc}</p>
+                </div>
               </div>
-            </article>
-          ))}
+            ))}
+          </div>
+        ))}
+        <div className="services-cta">
+          <p>Not sure which treatment fits your stage?</p>
+          <button className="btn btn-primary" onClick={() => scrollToId('book')}>Book a Consultation <ArrowRight size={16} /></button>
         </div>
       </div>
     </section>
@@ -261,15 +233,15 @@ function Team() {
         <div className="section-head">
           <span className="overline">Meet the Team</span>
           <h2>The people behind your restoration</h2>
-          <p>Led by Dr. Suby Kakkar, our clinical team handles everything from assessment and surgery to long-term follow-up care.</p>
+          <p>Our clinical team handles everything from assessment and surgery to long-term follow-up care.</p>
         </div>
         <div className="founder">
           <img src={asset('founder.png')} alt="Mr. Harish Kalsotra, Founder of Hair Haven" loading="lazy" />
           <div>
             <span className="overline" style={{ marginBottom: 8 }}>Founder</span>
             <h3 style={{ fontSize: '1.5rem' }}>Mr. Harish Kalsotra</h3>
-            <p style={{ color: 'var(--forest)', fontWeight: 700, fontSize: '.92rem', marginTop: 4 }}>Founder &amp; Client Relations Executive</p>
-            <blockquote>“Dedicated to helping clients regain confidence through advanced hair restoration solutions and personalized care.”</blockquote>
+            <p style={{ color: 'var(--forest)', fontWeight: 700, fontSize: '.92rem', marginTop: 4 }}>Founder &amp; Client Relations</p>
+            <p style={{ color: 'var(--ink-2)', marginTop: 14, maxWidth: 520 }}>The clinic&apos;s founder leads client relations personally — from your first consultation call to your 12-month review.</p>
           </div>
         </div>
         <div className="team-grid">
@@ -278,8 +250,6 @@ function Team() {
               <span className="avatar-fallback">{t.initials}</span>
               <p className="role">{t.role}</p>
               <h3>{t.name}</h3>
-              <p className="qual">{t.qual}</p>
-              <p>{t.bio}</p>
             </article>
           ))}
         </div>
@@ -293,7 +263,7 @@ function Calculator({ onBookEstimate }: { onBookEstimate: (stage: Norwood) => vo
   const [stage, setStage] = useState(3)
   const info = NORWOOD[stage - 1]
   return (
-    <section id="calculator">
+    <section id="calculator" className="band">
       <div className="container">
         <div className="section-head">
           <span className="overline">Hair Analysis</span>
@@ -317,7 +287,7 @@ function Calculator({ onBookEstimate }: { onBookEstimate: (stage: Norwood) => vo
               <p style={{ color: 'var(--ink-2)', marginTop: 7 }}>{info.description}</p>
               <div className="stat-grid">
                 <div className="stat"><span>Estimated grafts</span><b>{info.grafts}</b></div>
-                <div className="stat"><span>Indicative price</span><b>{info.priceRange}</b></div>
+                <div className="stat"><span>Norwood stage</span><b>Stage {info.stage} of 7</b></div>
                 <div className="stat"><span>Procedure duration</span><b>{info.duration}</b></div>
                 <div className="stat"><span>Typical recovery</span><b>{info.recovery}</b></div>
                 <div className="stat"><span>Donor density</span><b>{info.density}</b></div>
@@ -507,7 +477,7 @@ function BookingSection({ prefill, toast }: { prefill: { service?: string; date?
             {step === 4 && done && (
               <div>
                 <span className="success-badge"><CheckCircle2 size={32} /></span>
-                <h3 style={{ fontSize: '1.3rem' }}>Request saved, {done.name.split(' ')[0]}!</h3>
+                <h3 style={{ fontSize: '1.3rem' }}>Appointment requested, {done.name.split(' ')[0]}!</h3>
                 <p style={{ color: 'var(--ink-2)', marginTop: 7 }}>Reference <strong>{done.id}</strong>. This is a <strong>request, not a confirmed appointment</strong> — the clinic confirms your exact slot personally. Fastest way: send the request to the clinic on WhatsApp now.</p>
                 <div style={{ marginTop: 14 }}>
                   <div className="kv"><span>Service</span><b>{done.service}</b></div>
@@ -555,43 +525,28 @@ function BookingSection({ prefill, toast }: { prefill: { service?: string; date?
   )
 }
 
-/* ───────────────────────── Gallery & Reviews ───────────────────────── */
+/* ───────────────────────── Gallery ─────────────────────────
+   Per v2 spec: the repo's gallery files are marketing posters with outcome
+   claims baked in ("Results 100%") — they are NOT published as photos.
+   This section stays honest until the clinic supplies a clean, consented set. */
 function Results() {
-  const [showAll, setShowAll] = useState(false)
-  const imgs = showAll ? GALLERY : GALLERY.slice(0, 8)
   return (
     <section id="results">
       <div className="container">
         <div className="section-head">
-          <span className="overline">Patient Results</span>
-          <h2>Real results, shared by our clinic</h2>
-          <p>Before-and-after creatives published by Hair Haven on its official Instagram. Individual results vary — your expected outcome is discussed honestly at consultation, never promised in advance.</p>
+          <span className="overline">Gallery</span>
+          <h2>Patient results gallery</h2>
+          <p>Shared with patient consent. Results vary from person to person — your expected outcome is discussed honestly at consultation, never promised in advance.</p>
         </div>
-        <div className="gal-grid">
-          {imgs.map((g, i) => (
-            <figure key={g}>
-              <img src={asset(g)} alt={`Hair Haven patient result ${i + 1}`} loading="lazy" />
-            </figure>
-          ))}
+        <div className="gallery-empty">
+          <h3>Our verified photo gallery is being prepared</h3>
+          <p>We only publish real patient photos with consent and without exaggerated claims — so this gallery will open once the clinic&apos;s verified set is ready. Until then, the clinic&apos;s latest posts are on Instagram.</p>
+          <div style={{ display: 'flex', gap: 26, flexWrap: 'wrap', justifyContent: 'center', marginTop: 22 }}>
+            <a className="link-arrow" href={CLINIC.instagram} target="_blank" rel="noreferrer"><AtSign size={16} /> @hairhaventransplantclinic</a>
+            <a className="link-arrow" href={CLINIC.googleReviews} target="_blank" rel="noreferrer">Patient reviews on Google <ArrowRight size={15} /></a>
+          </div>
+          <p className="small muted">Shared with patient consent · Results vary from person to person</p>
         </div>
-        <div style={{ display: 'flex', gap: 26, flexWrap: 'wrap', alignItems: 'center', marginTop: 22 }}>
-          <button className="link-arrow" onClick={() => setShowAll(!showAll)}>{showAll ? 'Show fewer results' : 'Show all results'}</button>
-          <a className="link-arrow" href={CLINIC.instagram} target="_blank" rel="noreferrer"><AtSign size={16} /> @hairhaventransplantclinic</a>
-        </div>
-
-        <div className="grid grid-4" style={{ marginTop: 40 }}>
-          {REVIEWS.map((r) => (
-            <article className="review" key={r.name}>
-              <span className="stars" aria-label="5 star review">{[0, 1, 2, 3, 4].map((i) => <Star key={i} size={15} fill="currentColor" />)}</span>
-              <p style={{ fontSize: '.93rem', color: 'var(--ink-2)', margin: '11px 0 14px' }}>“{r.quote}”</p>
-              <div style={{ display: 'flex', gap: 11, alignItems: 'center' }}>
-                <span className="avatar-fallback" style={{ width: 42, height: 42, fontSize: '.85rem' }}>{r.name.split(' ').map((w) => w[0]).slice(0, 2).join('')}</span>
-                <div><b style={{ fontSize: '.9rem', display: 'block', lineHeight: 1.25 }}>{r.name}</b><span className="small muted">{r.tag} · {r.when}</span></div>
-              </div>
-            </article>
-          ))}
-        </div>
-        <p className="small muted" style={{ marginTop: 14 }}>Reviews above are patient reviews previously published on our Google profile. <a href={CLINIC.googleReviews} target="_blank" rel="noreferrer">Read all reviews on Google</a>.</p>
       </div>
     </section>
   )
@@ -600,7 +555,7 @@ function Results() {
 /* ───────────────────────── Journey & Aftercare ───────────────────────── */
 function Journey() {
   return (
-    <section id="journey">
+    <section id="journey" className="band">
       <div className="container">
         <div className="section-head">
           <span className="overline">My Hair Journey</span>
@@ -704,7 +659,7 @@ function Footer() {
           </div>
           <div>
             <h4>Explore</h4>
-            {[['Services', 'services'], ['Treatment Process', 'process'], ['Our Team', 'team'], ['Graft Calculator', 'calculator'], ['Patient Results', 'results'], ['My Hair Journey', 'journey'], ['Book Consultation', 'book']].map(([l, id]) => (
+            {[['Services', 'services'], ['Treatment Process', 'process'], ['Our Team', 'team'], ['Graft Calculator', 'calculator'], ['Gallery', 'results'], ['My Hair Journey', 'journey'], ['Book Consultation', 'book']].map(([l, id]) => (
               <p key={id} style={{ marginBottom: 7 }}><a href={`#${id}`} onClick={(e) => { e.preventDefault(); scrollToId(id) }}>{l}</a></p>
             ))}
           </div>
@@ -772,21 +727,14 @@ export default function App() {
   const [toastMsg, setToastMsg] = useState('')
   const toast = (m: string) => { setToastMsg(m); window.setTimeout(() => setToastMsg(''), 4200) }
 
-  const bookService = (title: string) => {
-    const mapped = BOOKABLE.find((b) => title.startsWith(b.split(' ')[0])) || 'General Hair Loss Consultation'
-    const service = title.includes('BioSapphire') ? 'Advanced BioSapphire FUE' : mapped
-    setPrefill({ service, nonce: Date.now() })
-    scrollToId('book')
-  }
   const bookEstimate = (n: Norwood) => {
     setPrefill({
       service: 'FUE Hair Transplant',
-      notes: `Norwood self-assessment: Stage ${n.stage} (${n.name}). Estimated grafts: ${n.grafts}. Indicative price: ${n.priceRange}. (Preliminary — to be confirmed at assessment.)`,
+      notes: `Norwood self-assessment: Stage ${n.stage} (${n.name}). Estimated grafts: ${n.grafts}. (Preliminary — to be confirmed at assessment.)`,
       nonce: Date.now(),
     })
     scrollToId('book')
   }
-  const pickDate = (iso: string) => { setPrefill({ date: iso, nonce: Date.now() }); scrollToId('book') }
 
   return (
     <>
@@ -795,8 +743,8 @@ export default function App() {
       </div>
       <Header />
       <main>
-        <Hero onPickDate={pickDate} />
-        <Services onBook={bookService} />
+        <Hero />
+        <Services />
         <Process />
         <Team />
         <Calculator onBookEstimate={bookEstimate} />
