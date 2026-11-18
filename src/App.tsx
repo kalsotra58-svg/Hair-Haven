@@ -3,7 +3,7 @@ import {
   Phone, MapPin, Clock, ChevronDown, Menu, X, ArrowRight, ArrowLeft,
   MessageCircle, Sparkles, Shield, Heart, Stethoscope, Scissors, Leaf, Eye,
   CalendarCheck, Camera, AlertCircle, CheckCircle2, Navigation, AtSign, Droplets, Home,
-  Calculator as CalculatorIcon, TrendingUp, User, Bell, Search, SlidersHorizontal, Share2,
+  Calculator as CalculatorIcon, TrendingUp, User, Bell, Search, SlidersHorizontal, Share2, BadgeCheck,
 } from 'lucide-react'
 
 /* ── Clinic data — extracted verbatim from the existing Hair Haven repository.
@@ -60,11 +60,13 @@ const PROCESS = [
 /* Roles only, per v2 spec: qualifications in the source repo are inconsistent
    (e.g. Dr Kakkar appears as both "E. Dermatology, Germany" and "MD Dermatology")
    and are held for clinic verification before publishing. */
+/* img = AI-generated DUMMY portraits (owner-approved placeholders, v4) — replace
+   with the clinic's real photos in the editing round. Never present as real. */
 const TEAM = [
-  { initials: 'SK', name: 'Dr. Suby Kakkar', role: 'Clinical Director' },
-  { initials: 'ME', name: 'Maxon Epston', role: 'Hair Transplant & PRP' },
-  { initials: 'KG', name: 'Kashish Gupta', role: 'Graft Implantation & Hairline' },
-  { initials: 'RB', name: 'Ronika Bhardwaj', role: 'Follow-ups & Patient Care' },
+  { initials: 'SK', name: 'Dr. Suby Kakkar', role: 'Clinical Director', img: '/img/doc-suby.jpg' },
+  { initials: 'ME', name: 'Maxon Epston', role: 'Hair Transplant & PRP', img: '/img/spec-maxon.jpg' },
+  { initials: 'KG', name: 'Kashish Gupta', role: 'Graft Implantation & Hairline', img: '/img/spec-kashish.jpg' },
+  { initials: 'RB', name: 'Ronika Bhardwaj', role: 'Follow-ups & Patient Care', img: '/img/spec-ronika.jpg' },
 ]
 
 interface Norwood { stage: number; name: string; description: string; grafts: string; priceRange: string; density: string; duration: string; recovery: string }
@@ -131,8 +133,107 @@ function Header() {
   )
 }
 
+/* ───────────────────────── DUMMY sign-in (v4) ─────────────────────────
+   Demo only: no real authentication, no real OTP is ever sent. Any 4 digits
+   "verify". The profile is stored only in this browser (localStorage). */
+interface Profile { name: string; phone: string }
+function loadProfile(): Profile | null {
+  try { const raw = localStorage.getItem('hh_profile'); return raw ? (JSON.parse(raw) as Profile) : null } catch { return null }
+}
+function AuthFlow({ onDone, onClose }: { onDone: (p: Profile) => void; onClose: () => void }) {
+  const [step, setStep] = useState(1)
+  const [phone, setPhone] = useState('')
+  const [otp, setOtp] = useState(['', '', '', ''])
+  const [name, setName] = useState('')
+  const [err, setErr] = useState('')
+  const otpRef = (i: number) => (el: HTMLInputElement | null) => { if (el) el.dataset.idx = String(i) }
+  const setDigit = (i: number, v: string) => {
+    const d = v.replace(/\D/g, '').slice(-1)
+    const next = [...otp]; next[i] = d; setOtp(next)
+    if (d && i < 3) {
+      const el = document.querySelector<HTMLInputElement>(`.otp-row input[data-idx="${i + 1}"]`)
+      el?.focus()
+    }
+  }
+  const submitPhone = () => {
+    const digits = phone.replace(/\D/g, '').replace(/^91/, '')
+    if (!/^[6-9]\d{9}$/.test(digits)) { setErr('Please enter a valid 10-digit Indian mobile number.'); return }
+    setErr(''); setPhone(digits); setStep(2)
+  }
+  const submitOtp = () => {
+    if (otp.some((d) => !d)) { setErr('Please enter all 4 digits — any digits work, this is a demo.'); return }
+    setErr(''); setStep(3)
+  }
+  const submitProfile = () => {
+    if (name.trim().length < 2) { setErr('Please enter your name.'); return }
+    const p = { name: name.trim(), phone }
+    try { localStorage.setItem('hh_profile', JSON.stringify(p)) } catch { /* storage unavailable */ }
+    onDone(p)
+  }
+  return (
+    <div className="auth-overlay" role="dialog" aria-modal="true" aria-label="Sign in (demo)">
+      <div className="auth-card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <img className="auth-logo" src={asset('logo.png')} alt="Hair Haven logo" />
+          <button className="circle-btn" onClick={onClose} aria-label="Close sign-in"><X size={19} /></button>
+        </div>
+        <span className="demo-tag" style={{ marginTop: 22 }}><AlertCircle size={13} /> Demo sign-in — no real OTP is sent</span>
+        {step === 1 && (
+          <>
+            <h2 style={{ fontSize: '1.6rem', marginTop: 16 }}>Welcome to Hair Haven</h2>
+            <p style={{ color: 'var(--ink-2)', marginTop: 8 }}>Sign in with your mobile number to manage consultations and your hair journey.</p>
+            <div className="field" style={{ marginTop: 24 }}>
+              <label htmlFor="auth-phone">Mobile number</label>
+              <input id="auth-phone" type="tel" inputMode="numeric" placeholder="e.g. 98765 43210" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            </div>
+            {err && <p className="err"><AlertCircle size={15} /> {err}</p>}
+            <button className="btn btn-primary btn-chip" style={{ width: '100%', marginTop: 20 }} onClick={submitPhone}>
+              <span className="chip"><ArrowRight size={16} /></span> Continue <span className="chip"><ArrowRight size={16} /></span>
+            </button>
+            <p className="small muted" style={{ marginTop: 14, textAlign: 'center' }}>Demo only — your number is not sent anywhere.</p>
+          </>
+        )}
+        {step === 2 && (
+          <>
+            <h2 style={{ fontSize: '1.6rem', marginTop: 16 }}>Enter OTP</h2>
+            <p style={{ color: 'var(--ink-2)', marginTop: 8 }}>We would normally text a code to +91 {phone}. <strong>This demo sends nothing</strong> — type any 4 digits.</p>
+            <div className="otp-row" style={{ marginTop: 24 }}>
+              {otp.map((d, i) => (
+                <input key={i} ref={otpRef(i)} type="tel" inputMode="numeric" maxLength={1} value={d} onChange={(e) => setDigit(i, e.target.value)} aria-label={`OTP digit ${i + 1}`} />
+              ))}
+            </div>
+            {err && <p className="err"><AlertCircle size={15} /> {err}</p>}
+            <button className="btn btn-primary btn-chip" style={{ width: '100%', marginTop: 22 }} onClick={submitOtp}>
+              <span className="chip"><ArrowRight size={16} /></span> Verify <span className="chip"><ArrowRight size={16} /></span>
+            </button>
+            <button className="link-arrow" style={{ marginTop: 16 }} onClick={() => setStep(1)}>Use a different number</button>
+          </>
+        )}
+        {step === 3 && (
+          <>
+            <h2 style={{ fontSize: '1.6rem', marginTop: 16 }}>Create your profile</h2>
+            <p style={{ color: 'var(--ink-2)', marginTop: 8 }}>Just your name for now — the clinic collects treatment details in person, never through a demo form.</p>
+            <div className="field" style={{ marginTop: 24 }}>
+              <label htmlFor="auth-name">Your name</label>
+              <input id="auth-name" type="text" placeholder="e.g. Rohit Sharma" value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            {err && <p className="err"><AlertCircle size={15} /> {err}</p>}
+            <button className="btn btn-primary btn-chip" style={{ width: '100%', marginTop: 20 }} onClick={submitProfile}>
+              <span className="chip"><Sparkles size={16} /></span> Create Profile <span className="chip"><ArrowRight size={16} /></span>
+            </button>
+            <p className="small muted" style={{ marginTop: 14, textAlign: 'center' }}>Saved only on this device (demo profile).</p>
+          </>
+        )}
+        <div className="dots" style={{ marginTop: 28, justifyContent: 'center' }} aria-hidden="true">
+          <span className={step === 1 ? 'on' : ''} /><span className={step === 2 ? 'on' : ''} /><span className={step === 3 ? 'on' : ''} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /* ───────────────────────── Hero (v3 onboarding style) ───────────────────────── */
-function Hero() {
+function Hero({ onStart }: { onStart: () => void }) {
   return (
     <div className="hero" id="top">
       <div className="container hero-grid">
@@ -143,7 +244,7 @@ function Hero() {
             FUE, BioSapphire FUE, PRP and GFC treatments in Channi Himmat, Jammu — every plan begins with an honest assessment of your hair loss.
           </p>
           <div className="hero-ctas">
-            <button className="btn btn-primary btn-chip" onClick={() => scrollToId('home')}>
+            <button className="btn btn-primary btn-chip" onClick={onStart}>
               <span className="chip"><Sparkles size={16} /></span> Get Started <span className="chip"><ArrowRight size={16} /></span>
             </button>
           </div>
@@ -164,21 +265,40 @@ function Hero() {
 }
 
 /* ───────────────────────── Home composition (v3) ───────────────────────── */
-function HomeComp({ query, setQuery, onCategory }: { query: string; setQuery: (q: string) => void; onCategory: (service: string) => void }) {
+function nextAvailable(): string {
+  const now = new Date()
+  const label = now.getHours() < 18 ? 'Today' : 'Tomorrow'
+  return `${label}, from 10:00 AM`
+}
+function HomeComp({ query, setQuery, onCategory, profileName, onAvatar }: { query: string; setQuery: (q: string) => void; onCategory: (service: string) => void; profileName: string; onAvatar: () => void }) {
   const hour = new Date().getHours()
   const greet = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening'
+  const [liked, setLiked] = useState<{ [k: string]: boolean }>({})
   const cats = [
     { label: 'FUE', icon: 'scissors' as const, lime: true, service: 'FUE Hair Transplant' },
     { label: 'PRP', icon: 'droplets' as const, lime: false, service: 'PRP Therapy' },
     { label: 'GFC', icon: 'leaf' as const, lime: false, service: 'GFC Therapy' },
     { label: 'More', icon: 'sparkles' as const, lime: false, service: '' },
   ]
+  const pops = [
+    { label: 'Transplant', icon: 'scissors' as const, service: 'FUE Hair Transplant' },
+    { label: 'PRP', icon: 'droplets' as const, service: 'PRP Therapy' },
+    { label: 'GFC', icon: 'leaf' as const, service: 'GFC Therapy' },
+    { label: 'Beard', icon: 'sparkles' as const, service: 'Beard Transplant' },
+    { label: 'Eyebrow', icon: 'eye' as const, service: 'Eyebrow Transplant' },
+  ]
+  const cards = [
+    { img: '/img/scene-procedure.jpg', title: 'FUE Hair Transplant', sub: 'Surgical restoration', service: 'FUE Hair Transplant' },
+    { img: '/img/scene-clinic.jpg', title: 'The Clinic & OT', sub: 'Channi Himmat, Jammu', service: '' },
+  ]
   return (
     <section id="home" style={{ paddingTop: 40 }}>
       <div className="container">
         <div className="greet-row">
-          <img className="g-av" src={asset('logo.png')} alt="Hair Haven logo" />
-          <div><small>{greet}</small><b>Aman!</b></div>
+          <button onClick={onAvatar} aria-label={profileName === 'Aman' ? 'Sign in (demo)' : 'Your profile'} style={{ background: 'none', border: 'none', padding: 0, display: 'flex' }}>
+            <img className="g-av" src={asset('logo.png')} alt="Hair Haven logo" />
+          </button>
+          <div><small>{greet}</small><b>{profileName}!</b></div>
           <button className="bell-btn" aria-label="Book a consultation" onClick={() => scrollToId('book')}><Bell size={20} /></button>
         </div>
         <div className="search-row">
@@ -188,7 +308,11 @@ function HomeComp({ query, setQuery, onCategory }: { query: string; setQuery: (q
           </label>
           <button className="filter-btn" aria-label="See all services" onClick={() => scrollToId('services')}><SlidersHorizontal size={20} /></button>
         </div>
-        <div className="cat-row">
+        <div className="sec-row" style={{ marginTop: 28 }}>
+          <h2>Categories</h2>
+          <button onClick={() => scrollToId('services')}>View all</button>
+        </div>
+        <div className="cat-row" style={{ marginTop: 10 }}>
           {cats.map((c) => (
             <button key={c.label} className={`cat-tile${c.lime ? ' lime' : ''}`} onClick={() => (c.service ? onCategory(c.service) : scrollToId('services'))}>
               <span className="ic"><ServiceIcon k={c.icon} /></span>{c.label}
@@ -196,16 +320,20 @@ function HomeComp({ query, setQuery, onCategory }: { query: string; setQuery: (q
           ))}
         </div>
 
-        <div className="feat-doc">
+        <div className="sec-row" style={{ marginTop: 30 }}>
+          <h2>Featured Doctor</h2>
+        </div>
+        <div className="feat-doc" style={{ marginTop: 10 }}>
           <div>
-            <span className="role">Featured Doctor</span>
-            <h3>Dr. Suby Kakkar</h3>
-            <p>Clinical Director at Hair Haven — leading assessments, transplant planning and growth-factor therapies.</p>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>Dr. Suby Kakkar <BadgeCheck size={21} className="verified" aria-label="Clinical Director" /></h3>
+            <p style={{ fontWeight: 700, color: '#3E6216' }}>Clinical Director</p>
+            <p>Leading assessments, transplant planning and growth-factor therapies at Hair Haven.</p>
+            <p style={{ fontWeight: 650 }}><Clock size={15} style={{ verticalAlign: -2, marginRight: 6 }} />Next Available — {nextAvailable()} <span style={{ fontWeight: 550 }}>(clinic confirms)</span></p>
             <button className="btn btn-primary btn-chip" onClick={() => scrollToId('doctor')}>Book Appointment <span className="chip"><ArrowRight size={16} /></span></button>
           </div>
-          <div className="portrait-ph" role="img" aria-label="Portrait of Dr. Suby Kakkar — real photo coming soon">
-            <span className="ini">SK</span>
-            <span className="tag">Real photo coming soon</span>
+          <div className="feat-photo">
+            <img src="/img/doc-suby.jpg" alt="Portrait placeholder for Dr. Suby Kakkar (dummy photo)" />
+            <span className="dummy-tag">Dummy photo</span>
           </div>
         </div>
 
@@ -217,12 +345,54 @@ function HomeComp({ query, setQuery, onCategory }: { query: string; setQuery: (q
           <div className="spec-grid">
             {TEAM.filter((t) => ['Maxon Epston', 'Kashish Gupta'].includes(t.name)).map((t) => (
               <button key={t.name} className="spec-card" onClick={() => scrollToId('team')}>
-                <span className="avatar-fallback">{t.initials}</span>
+                <img src={t.img} alt={`Portrait placeholder for ${t.name} (dummy photo)`} style={{ width: 58, height: 58, borderRadius: '50%', objectFit: 'cover', flex: 'none' }} />
                 <span><h4>{t.name}</h4><p>{t.role}</p></span>
                 <span className="go"><ArrowRight size={17} /></span>
               </button>
             ))}
           </div>
+        </div>
+
+        <div className="exclusive">
+          <div className="txt">
+            <span className="overline" style={{ color: '#BFE3CC' }}>Exclusive at Hair Haven</span>
+            <h3>BioSapphire FUE — our most advanced technique</h3>
+            <p>Sapphire micro-channels for denser packing and faster healing, planned after an in-clinic assessment.</p>
+            <button className="btn btn-chip" onClick={() => onCategory('Advanced BioSapphire FUE')}>Book Now <span className="chip dark"><ArrowRight size={16} /></span></button>
+          </div>
+          <img src="/img/scene-clinic.jpg" alt="Hair Haven clinic interior (dummy photo)" />
+        </div>
+
+        <div style={{ marginTop: 32 }}>
+          <div className="sec-row">
+            <h2>Popular Categories</h2>
+            <button onClick={() => scrollToId('services')}>See All</button>
+          </div>
+          <div className="pop-row">
+            {pops.map((p) => (
+              <button key={p.label} className="pop-tile" onClick={() => onCategory(p.service)}>
+                <span className="ic"><ServiceIcon k={p.icon} /></span>{p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="img-cards">
+          {cards.map((c) => (
+            <article className="img-card" key={c.title}>
+              <div className="ph">
+                <img src={c.img} alt={`${c.title} (dummy photo)`} loading="lazy" />
+                <button className={`heart${liked[c.title] ? ' on' : ''}`} aria-label={`Save ${c.title}`} aria-pressed={!!liked[c.title]} onClick={() => setLiked({ ...liked, [c.title]: !liked[c.title] })}>
+                  <Heart size={17} fill={liked[c.title] ? 'currentColor' : 'none'} />
+                </button>
+                <span className="dummy-tag">Dummy photo</span>
+              </div>
+              <div className="ft">
+                <span><b>{c.title}</b><small>{c.sub}</small></span>
+                <button className="go" aria-label={`Open ${c.title}`} onClick={() => (c.service ? onCategory(c.service) : scrollToId('contact'))}><ArrowRight size={17} /></button>
+              </div>
+            </article>
+          ))}
         </div>
       </div>
     </section>
@@ -235,6 +405,7 @@ function DoctorProfile({ onBookVisit, toast }: { onBookVisit: (date: string, slo
   const [selDate, setSelDate] = useState(days[0].iso)
   const [selSlot, setSelSlot] = useState('10:00 AM')
   const [liked, setLiked] = useState(false)
+  const [expanded, setExpanded] = useState(false)
   const share = async () => {
     try { await navigator.clipboard.writeText(window.location.href); toast('Page link copied — share it with anyone considering treatment.') }
     catch { toast('Copy the page address from your browser to share it.') }
@@ -252,15 +423,15 @@ function DoctorProfile({ onBookVisit, toast }: { onBookVisit: (date: string, slo
         </div>
         <div className="profile-grid">
           <div className="profile-photo">
-            <div className="portrait-ph" role="img" aria-label="Portrait of Dr. Suby Kakkar — real photo coming soon">
-              <span className="ini">SK</span>
-              <span className="tag">Real photo coming soon</span>
+            <div className="feat-photo" style={{ minHeight: 420 }}>
+              <img src="/img/doc-suby.jpg" alt="Portrait placeholder for Dr. Suby Kakkar (dummy photo)" />
+              <span className="dummy-tag">Dummy photo — real portrait coming soon</span>
             </div>
             <button className="book-pill-vert" onClick={() => scrollToId('book')}>BOOK</button>
           </div>
           <div>
             <span className="overline" style={{ marginBottom: 8 }}>Clinical Director</span>
-            <h2 style={{ fontSize: '1.7rem' }}>Dr. Suby Kakkar</h2>
+            <h2 style={{ fontSize: '1.7rem', display: 'flex', alignItems: 'center', gap: 9 }}>Dr. Suby Kakkar <BadgeCheck size={22} className="verified" aria-label="Clinical Director" /></h2>
             <div className="stat-row">
               <div className="stat-cell"><span><MapPin size={13} /> Location</span><b>Sector 3, Jammu</b></div>
               <div className="stat-cell"><span><Clock size={13} /> Hours</span><b>10–6 · 7 days</b></div>
@@ -271,7 +442,14 @@ function DoctorProfile({ onBookVisit, toast }: { onBookVisit: (date: string, slo
               Dr. Suby Kakkar leads the clinical team at Hair Haven Transplant Clinic, Jammu — overseeing scalp
               assessments, hair transplant procedures and growth-factor therapies. Every treatment plan at the
               clinic is confirmed only after an in-person assessment; nothing is prescribed from photos alone.
+              {expanded && (
+                <> The clinic&apos;s approach is deliberately conservative: graft counts are estimated from your
+                actual donor density, hairlines are designed around your face and age, and non-surgical options
+                like PRP and GFC are recommended first when surgery is not yet the right step. Follow-up care —
+                wash guidance, medication reviews and growth checks — is handled by the same team that treated you.</>
+              )}
             </p>
+            <button className="link-arrow" style={{ marginTop: 8 }} onClick={() => setExpanded(!expanded)}>{expanded ? 'Read less' : 'Read more'} <ChevronDown size={15} style={{ transform: expanded ? 'rotate(180deg)' : 'none' }} /></button>
             <h3 style={{ marginTop: 24 }}>Available Time</h3>
             <div className="date-chips" style={{ marginTop: 12 }} role="group" aria-label="Pick a preferred date">
               {days.map((d) => (
@@ -408,12 +586,13 @@ function Team() {
         <div className="team-grid">
           {TEAM.map((t) => (
             <article className="member" key={t.name}>
-              <span className="avatar-fallback">{t.initials}</span>
+              <img src={t.img} alt={`Portrait placeholder for ${t.name} (dummy photo)`} loading="lazy" style={{ width: 86, height: 86, borderRadius: '50%', objectFit: 'cover', marginBottom: 14 }} />
               <p className="role">{t.role}</p>
               <h3>{t.name}</h3>
             </article>
           ))}
         </div>
+        <p className="small muted" style={{ marginTop: 14 }}>Portraits above are temporary dummy placeholders — the clinic&apos;s real team photos replace them in the editing round.</p>
       </div>
     </section>
   )
@@ -842,12 +1021,12 @@ function Footer() {
   )
 }
 
+/* Floating glassmorphism pill nav (v4, Reference A): active tab = filled green circle */
 function BottomNav() {
   const tabs = [
     { id: 'top', label: 'Home', Icon: Home },
-    { id: 'calculator', label: 'Assess', Icon: CalculatorIcon },
     { id: 'book', label: 'Appointments', Icon: CalendarCheck },
-    { id: 'journey', label: 'Journey', Icon: TrendingUp },
+    { id: 'results', label: 'Gallery', Icon: Heart },
     { id: 'contact', label: 'Profile', Icon: User },
   ]
   const [active, setActive] = useState('top')
@@ -876,7 +1055,7 @@ function BottomNav() {
           aria-current={active === id ? 'page' : undefined}
           onClick={(e) => { e.preventDefault(); setActive(id); if (id === 'top') window.scrollTo({ top: 0, behavior: 'smooth' }); else scrollToId(id) }}
         >
-          <span className="tab-ic"><Icon size={21} /></span>{label}
+          <span className="tab-ic"><Icon size={21} /></span>
         </a>
       ))}
     </nav>
@@ -888,7 +1067,11 @@ export default function App() {
   const [prefill, setPrefill] = useState<{ service?: string; date?: string; slot?: string; notes?: string; nonce: number }>({ nonce: 0 })
   const [toastMsg, setToastMsg] = useState('')
   const [query, setQuery] = useState('')
+  const [profile, setProfile] = useState<Profile | null>(() => loadProfile())
+  const [authOpen, setAuthOpen] = useState(false)
   const toast = (m: string) => { setToastMsg(m); window.setTimeout(() => setToastMsg(''), 4200) }
+  const startFlow = () => { if (profile) scrollToId('home'); else setAuthOpen(true) }
+  const avatarTap = () => { if (!profile) setAuthOpen(true); else toast(`Signed in (demo) as ${profile.name} — profile is saved only on this device.`) }
   const bookCategory = (service: string) => { setPrefill({ service, nonce: Date.now() }); scrollToId('book') }
   const bookVisit = (date: string, slot: string) => {
     setPrefill({ service: 'FUE Hair Transplant', date, slot, nonce: Date.now() })
@@ -912,8 +1095,8 @@ export default function App() {
       </div>
       <Header />
       <main>
-        <Hero />
-        <HomeComp query={query} setQuery={setQuery} onCategory={bookCategory} />
+        <Hero onStart={startFlow} />
+        <HomeComp query={query} setQuery={setQuery} onCategory={bookCategory} profileName={profile ? profile.name.split(' ')[0] : 'Aman'} onAvatar={avatarTap} />
         <DoctorProfile onBookVisit={bookVisit} toast={toast} />
         <Services query={query} />
         <Process />
@@ -927,6 +1110,12 @@ export default function App() {
       </main>
       <Footer />
       <BottomNav />
+      {authOpen && (
+        <AuthFlow
+          onClose={() => setAuthOpen(false)}
+          onDone={(p) => { setProfile(p); setAuthOpen(false); toast(`Welcome, ${p.name.split(' ')[0]}! Demo profile created — saved only on this device.`); scrollToId('home') }}
+        />
+      )}
       {toastMsg && <div className="toast" role="status">{toastMsg}</div>}
     </>
   )
