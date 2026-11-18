@@ -55,6 +55,7 @@ section{padding:48px 0 8px;scroll-margin-top:96px}
 .nav a{text-decoration:none;color:var(--ink-2);font-size:.9rem;font-weight:600;padding:8px 12px;border-radius:var(--r-pill)}
 .nav a:hover{background:var(--emerald-soft);color:var(--forest-700)}
 .header-cta{display:flex;gap:9px;align-items:center;margin-left:8px}
+.header-cta .btn{white-space:nowrap}
 .icon-btn{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--card);display:inline-flex;align-items:center;justify-content:center;color:var(--forest-700);text-decoration:none;flex:none}
 .menu-btn{display:none}
 @media(max-width:900px){.nav{display:none}.nav.open{display:flex;position:absolute;top:72px;left:12px;right:12px;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:10px;box-shadow:var(--shadow-md)}.menu-btn{display:inline-flex}}
