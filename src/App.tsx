@@ -3,7 +3,7 @@ import {
   Phone, MapPin, Clock, ChevronDown, ChevronLeft, ChevronRight, Menu, X, ArrowRight, ArrowLeft, ArrowUpRight,
   MessageCircle, Sparkles, Shield, Heart, Stethoscope, Scissors, Leaf, Eye,
   CalendarCheck, Camera, AlertCircle, CheckCircle2, Check, Info, Navigation, AtSign, Droplets, Home,
-  Calculator as CalculatorIcon, TrendingUp, User, Bell, Search, SlidersHorizontal, Share2,
+  Calculator as CalculatorIcon, TrendingUp, User, Bell, Search, SlidersHorizontal, Share2, Route,
 } from 'lucide-react'
 
 /* ── Clinic data — extracted verbatim from the existing Hair Haven repository.
@@ -768,7 +768,7 @@ function BookingSection({ prefill, toast, profileName }: { prefill: { service?: 
               </p>
               <p className="small muted" style={{ marginTop: 12 }}>Reference: <strong style={{ color: 'var(--ink)' }}>{done.id}</strong> · {done.service}</p>
               <button className="btn btn-primary" style={{ width: '100%', marginTop: 22, minHeight: 56 }} onClick={() => { setDone(null); scrollToId('home') }}>Done</button>
-              <button className="link-arrow" style={{ marginTop: 16 }} onClick={() => scrollToId('my-requests')}>View My Appointments</button>
+              <button className="btn btn-secondary" style={{ marginTop: 16, minHeight: 48 }} onClick={() => scrollToId('my-requests')}>View My Appointments</button>
             </div>
           ) : (
             <>
@@ -988,41 +988,49 @@ function Footer() {
   )
 }
 
-/* Floating glassmorphism pill nav (v4, Reference A): active tab = filled green circle */
-function BottomNav() {
+/* Floating WHITE bottom nav (official design system): 4 labelled tabs, active = emerald on sage */
+function BottomNav({ onProfile }: { onProfile: () => void }) {
   const tabs = [
     { id: 'top', label: 'Home', Icon: Home },
     { id: 'book', label: 'Appointments', Icon: CalendarCheck },
-    { id: 'results', label: 'Gallery', Icon: Heart },
-    { id: 'contact', label: 'Profile', Icon: User },
+    { id: 'journey', label: 'My Journey', Icon: Route },
+    { id: 'profile', label: 'Profile', Icon: User },
   ]
   const [active, setActive] = useState('top')
   useEffect(() => {
+    const spyIds = ['top', 'book', 'journey']
     const onScroll = () => {
+      if (active === 'profile') return
       const probe = window.scrollY + window.innerHeight * 0.4
       let current = 'top'
-      tabs.forEach((t) => {
-        const el = document.getElementById(t.id)
-        if (el && el.getBoundingClientRect().top + window.scrollY <= probe) current = t.id
+      spyIds.forEach((id) => {
+        const el = document.getElementById(id)
+        if (el && el.getBoundingClientRect().top + window.scrollY <= probe) current = id
       })
       setActive(current)
     }
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [active])
   return (
     <nav className="bottom-nav" aria-label="Quick navigation">
       {tabs.map(({ id, label, Icon }) => (
         <a
           key={id}
-          href={`#${id}`}
-          className={`${active === id ? 'active' : ''}${id === 'results' ? ' heart-tab' : ''}`.trim() || undefined}
+          href={id === 'profile' ? '#profile' : `#${id}`}
+          className={active === id ? 'active' : undefined}
           aria-current={active === id ? 'page' : undefined}
-          onClick={(e) => { e.preventDefault(); setActive(id); if (id === 'top') window.scrollTo({ top: 0, behavior: 'smooth' }); else scrollToId(id) }}
+          onClick={(e) => {
+            e.preventDefault()
+            setActive(id)
+            if (id === 'profile') onProfile()
+            else if (id === 'top') window.scrollTo({ top: 0, behavior: 'smooth' })
+            else scrollToId(id)
+          }}
         >
-          <span className="tab-ic"><Icon size={21} /></span>
+          <Icon size={21} strokeWidth={1.7} />
+          <span className="tab-label">{label}</span>
         </a>
       ))}
     </nav>
@@ -1036,6 +1044,15 @@ export default function App() {
   const [query, setQuery] = useState('')
   const [profile, setProfile] = useState<Profile | null>(() => loadProfile())
   const [authOpen, setAuthOpen] = useState(false)
+  /* Splash (official design system): once per session, ~2s, logo fade-in + emerald line + tagline */
+  const [splash, setSplash] = useState(() => { try { return !sessionStorage.getItem('hh_splash') } catch { return true } })
+  const [splashGone, setSplashGone] = useState(false)
+  useEffect(() => {
+    if (!splash) return
+    const t1 = window.setTimeout(() => setSplashGone(true), 1750)
+    const t2 = window.setTimeout(() => { setSplash(false); try { sessionStorage.setItem('hh_splash', '1') } catch { /* private mode */ } }, 2300)
+    return () => { window.clearTimeout(t1); window.clearTimeout(t2) }
+  }, [splash])
   const toast = (m: string) => { setToastMsg(m); window.setTimeout(() => setToastMsg(''), 4200) }
   const startFlow = () => { if (profile) scrollToId('home'); else setAuthOpen(true) }
   const avatarTap = () => { if (!profile) setAuthOpen(true); else toast(`Signed in (demo) as ${profile.name} — profile is saved only on this device.`) }
@@ -1073,7 +1090,14 @@ export default function App() {
         <Contact />
       </main>
       <Footer />
-      <BottomNav />
+      <BottomNav onProfile={() => setAuthOpen(true)} />
+      {splash && (
+        <div className={`splash${splashGone ? ' bye' : ''}`} aria-hidden="true">
+          <img src={asset('logo.png')} alt="" />
+          <span className="splash-line" />
+          <p className="serif">Restoring Hair, Rebuilding Confidence.</p>
+        </div>
+      )}
       {authOpen && (
         <AuthFlow
           onClose={() => setAuthOpen(false)}
