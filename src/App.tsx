@@ -39,7 +39,7 @@ const SERVICES: Service[] = [
   { title: 'Scalp Assessment & Hair Analysis', desc: 'A clinical scalp evaluation and Norwood stage mapping so treatment recommendations are based on your actual hair loss, not guesswork.', price: 'Part of consultation', features: ['Scalp evaluation', 'Norwood mapping', 'Treatment guidance'], icon: 'stethoscope' },
 ]
 const ServiceIcon = ({ k }: { k: Service['icon'] }) => {
-  const s = { size: 22 }
+  const s = { size: 22, strokeWidth: 1.6 }
   switch (k) {
     case 'scissors': return <Scissors {...s} />
     case 'droplets': return <Droplets {...s} />
@@ -214,7 +214,7 @@ function AuthFlow({ onDone, onClose }: { onDone: (p: Profile) => void; onClose: 
               ))}
             </div>
             <p className="small" style={{ marginTop: 20, display: 'flex', gap: 7, alignItems: 'center', color: 'var(--ink-2)' }}>
-              <Clock size={14} style={{ color: '#B98F3E' }} />
+              <Clock size={14} style={{ color: '#C6A66B' }} />
               {secs > 0
                 ? <>Resend code in 00:{String(secs).padStart(2, '0')}</>
                 : <>Didn&apos;t get it? <button className="link-arrow" onClick={() => { setSecs(30); setOtp(['', '', '', '', '', '']) }}>Resend code</button></>}
@@ -270,7 +270,7 @@ function Hero({ onStart }: { onStart: () => void }) {
     <div className="hero" id="top">
       <div className="container hero-grid">
         <div>
-          <h1>Your Hair, <span className="grn">Your Confidence</span></h1>
+          <h1 className="serif">Your Hair, <span className="grn">Your Confidence</span></h1>
           <p className="lead" style={{ marginTop: 14, maxWidth: 430 }}>
             Trusted hair transplant and restoration in Channi Himmat, Jammu — book a consultation in minutes.
           </p>
@@ -317,10 +317,10 @@ function HomeComp({ query, setQuery, onCategory, profileName, onAvatar }: { quer
   ]
   const pops = [
     { label: 'FUE', icon: 'scissors' as const, service: 'FUE Hair Transplant', tint: '#E6FBF1' },
-    { label: 'BioSapphire', icon: 'sparkles' as const, service: 'Advanced BioSapphire FUE', tint: '#EEF4EE' },
-    { label: 'PRP', icon: 'droplets' as const, service: 'PRP Therapy', tint: '#FBF3D9' },
+    { label: 'BioSapphire', icon: 'sparkles' as const, service: 'Advanced BioSapphire FUE', tint: '#E8F1EB' },
+    { label: 'PRP', icon: 'droplets' as const, service: 'PRP Therapy', tint: '#F7F1E3' },
     { label: 'GFC', icon: 'leaf' as const, service: 'GFC Therapy', tint: '#F0FAF4' },
-    { label: 'Beard', icon: 'user' as const, service: 'Beard Transplant', tint: '#EEF4EE' },
+    { label: 'Beard', icon: 'user' as const, service: 'Beard Transplant', tint: '#E8F1EB' },
   ]
   const cards = [
     { img: '/img/scene-procedure.jpg', title: 'FUE Hair Transplant', price: 'from ₹21,000', service: 'FUE Hair Transplant' },
@@ -358,8 +358,8 @@ function HomeComp({ query, setQuery, onCategory, profileName, onAvatar }: { quer
         <div className="feat-doc">
           <div>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: 7 }}>Dr. Suby Kakkar <span className="tick"><Check size={12} strokeWidth={3.5} /></span></h3>
-            <p style={{ fontWeight: 600, color: '#3E4A42' }}>Clinical Director</p>
-            <p style={{ fontWeight: 650, marginTop: 10 }}><Clock size={14} style={{ verticalAlign: -2, marginRight: 6 }} />Open today · 10 AM – 6 PM</p>
+            <p style={{ fontWeight: 600, color: '#4C554E' }}>Clinical Director</p>
+            <p style={{ fontWeight: 650, marginTop: 10 }}><Clock size={14} style={{ verticalAlign: -2, marginRight: 6, color: '#C6A66B' }} />Open today · 10 AM – 6 PM</p>
             <button className="btn btn-primary btn-chip btn-44" style={{ marginTop: 14 }} onClick={() => scrollToId('doctor')}>Book Appointment <span className="chip"><ArrowRight size={15} /></span></button>
           </div>
           <div className="feat-photo">
@@ -402,7 +402,7 @@ function HomeComp({ query, setQuery, onCategory, profileName, onAvatar }: { quer
           <div className="pop-row">
             {pops.map((p) => (
               <button key={p.label} className="pop-tile" onClick={() => onCategory(p.service)}>
-                <span className="ic" style={{ background: p.tint, ...(p.tint === '#FBF3D9' ? { color: '#B98F3E' } : {}) }}><ServiceIcon k={p.icon} /></span>{p.label}
+                <span className="ic" style={{ background: p.tint, ...(p.tint === '#F7F1E3' ? { color: '#C6A66B' } : {}) }}><ServiceIcon k={p.icon} /></span>{p.label}
               </button>
             ))}
           </div>
@@ -470,11 +470,11 @@ function DoctorProfile({ onBookVisit, toast }: { onBookVisit: (date: string, slo
             <b>Sector 3 · Jammu</b><span>Clinic Location</span>
           </div>
           <div className="stat-col">
-            <span className="stat-ic" style={{ background: '#EEF4EE', color: '#5F7F66' }}><Clock size={20} /></span>
+            <span className="stat-ic" style={{ background: '#E8F1EB', color: '#087A50' }}><Clock size={20} /></span>
             <b>10–6 · Open 7 days</b><span>Clinic Hours</span>
           </div>
           <div className="stat-col">
-            <span className="stat-ic" style={{ background: '#FBF3D9', color: '#B98F3E' }}><Sparkles size={20} /></span>
+            <span className="stat-ic" style={{ background: '#F7F1E3', color: '#C6A66B' }}><Sparkles size={20} /></span>
             <b>FUE · BioSapphire</b><span>Hair Transplant</span>
           </div>
         </div>
@@ -511,7 +511,7 @@ function DoctorProfile({ onBookVisit, toast }: { onBookVisit: (date: string, slo
             ))}
           </div>
           <p className="small" style={{ marginTop: 12, display: 'flex', gap: 7, alignItems: 'center', color: 'var(--ink-2)' }}>
-            <Info size={14} style={{ color: '#5F7F66', flex: 'none' }} /> Preferred time — the clinic confirms your exact slot personally
+            <Info size={14} style={{ color: '#087A50', flex: 'none' }} /> Preferred time — the clinic confirms your exact slot personally
           </p>
           <button className="btn btn-primary btn-chip profile-cta" style={{ marginTop: 18 }} onClick={() => onBookVisit(selDate, selSlot)}>
             Book Appointment <span className="chip"><ArrowRight size={16} /></span>
@@ -775,7 +775,7 @@ function BookingSection({ prefill, toast, profileName }: { prefill: { service?: 
               <div className="grab" />
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                 <h3 style={{ fontSize: '1.25rem' }}>Book Appointment</h3>
-                <button className="circle-btn" style={{ width: 36, height: 36, background: '#F4F3EE', border: 'none' }} aria-label="Close booking" onClick={() => scrollToId('doctor')}><X size={16} /></button>
+                <button className="circle-btn" style={{ width: 36, height: 36, background: '#E8F1EB', border: 'none' }} aria-label="Close booking" onClick={() => scrollToId('doctor')}><X size={16} /></button>
               </div>
               <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginTop: 18 }}>
                 <img src="/img/doc-suby.jpg" alt="Portrait placeholder (dummy photo)" style={{ width: 56, height: 56, borderRadius: 16, objectFit: 'cover', objectPosition: 'top' }} />
@@ -784,7 +784,7 @@ function BookingSection({ prefill, toast, profileName }: { prefill: { service?: 
                   <span className="small muted">Clinical Director · Hair Haven</span>
                   <span className="small" style={{ display: 'block', color: 'var(--forest)', fontWeight: 650 }}>Treatment: {treatment}</span>
                 </div>
-                <button className="btn" disabled style={{ marginLeft: 'auto', minHeight: 36, padding: '0 14px', fontSize: '.82rem', background: '#F4F3EE', color: 'var(--ink-3)' }}>Change</button>
+                <button className="btn" disabled style={{ marginLeft: 'auto', minHeight: 36, padding: '0 14px', fontSize: '.82rem', background: '#E8F1EB', color: 'var(--ink-3)' }}>Change</button>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 24 }}>
                 <b>{monthName}</b>
@@ -804,7 +804,7 @@ function BookingSection({ prefill, toast, profileName }: { prefill: { service?: 
                 ))}
               </div>
               <p className="small" style={{ marginTop: 12, display: 'flex', gap: 7, alignItems: 'center', color: 'var(--ink-2)' }}>
-                <Info size={14} style={{ color: '#5F7F66', flex: 'none' }} /> Preferred time — the clinic confirms your exact slot personally
+                <Info size={14} style={{ color: '#087A50', flex: 'none' }} /> Preferred time — the clinic confirms your exact slot personally
               </p>
               <button className="btn btn-primary btn-chip" style={{ width: '100%', marginTop: 20, minHeight: 56 }} disabled={!date || !slot} onClick={request}>
                 Request Appointment {date && slot && <span className="chip"><ArrowRight size={16} /></span>}
@@ -961,6 +961,7 @@ function Footer() {
         <div className="foot-grid">
           <div>
             <h4>Hair Haven Transplant Clinic</h4>
+            <p className="foot-tagline">Restoring Hair, Rebuilding Confidence.</p>
             <p style={{ fontSize: '.9rem', maxWidth: 380 }}>Premium hair restoration in Jammu — FUE &amp; BioSapphire FUE hair transplant, PRP &amp; GFC therapy, beard &amp; eyebrow transplant.</p>
             <p style={{ fontSize: '.9rem', marginTop: 12 }}>{CLINIC.address}<br />{CLINIC.phoneDisplay} · {CLINIC.hours}</p>
           </div>
