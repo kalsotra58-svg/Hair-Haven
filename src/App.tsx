@@ -3,12 +3,12 @@ import {
   Phone, MapPin, Clock, ChevronDown, ChevronLeft, ChevronRight, Menu, X, ArrowRight, ArrowLeft, ArrowUpRight,
   MessageCircle, Sparkles, Shield, Heart, Stethoscope, Scissors, Leaf, Eye,
   CalendarCheck, Camera, AlertCircle, CheckCircle2, Check, Info, Navigation, AtSign, Droplets, Home,
-  Calculator as CalculatorIcon, TrendingUp, User, Bell, Search, SlidersHorizontal, Share2, Route,
+  Calculator as CalculatorIcon, TrendingUp, User, Bell, Search, SlidersHorizontal, Share2, Route, Car,
 } from 'lucide-react'
 
 /* ── Clinic data — extracted verbatim from the existing Hair Haven repository.
       Nothing here is invented: see AUDIT.md for sources and flagged inconsistencies. ── */
-const RAW = 'https://raw.githubusercontent.com/manmohan01singh/HAIR-HAVEN/main/public/'
+const RAW = 'https://hairhavenclinic.vercel.app/'
 const asset = (name: string) => RAW + encodeURIComponent(name)
 
 export const CLINIC = {
@@ -16,7 +16,7 @@ export const CLINIC = {
   phoneDisplay: '+91 88997 08659',
   phoneLink: 'tel:+918899708659',
   whatsapp: 'https://wa.me/918899708659',
-  address: '606/B, Sector 3, Channi Himmat, Jammu – 180015, J&K',
+  address: '606/B, Sector 3, Channi Himmat, Jammu – 180015, J&K · Opposite Kashmir Flavours Restaurant',
   hours: '10:00 AM – 6:00 PM · Open 7 days',
   instagram: 'https://instagram.com/hairhaventransplantclinic',
   maps: 'https://maps.app.goo.gl/QFGD7kxLjtaQFP739',
@@ -940,6 +940,7 @@ function Contact() {
           <div>
             <div className="kv"><span><MapPin size={14} /> Address</span><b>{CLINIC.address}</b></div>
             <div className="kv"><span><Clock size={14} /> Hours</span><b>10:00 AM – 6:00 PM · Open 7 days</b></div>
+            <div className="kv"><span><Car size={14} /> Parking</span><b>Free on-site parking</b></div>
             <div className="kv"><span><Phone size={14} /> Phone / WhatsApp</span><b>{CLINIC.phoneDisplay}</b></div>
             <div className="kv"><span><AtSign size={14} /> Instagram</span><b>@hairhaventransplantclinic</b></div>
             <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap', alignItems: 'center', marginTop: 24 }}>
